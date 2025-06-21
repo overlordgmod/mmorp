@@ -7,6 +7,7 @@ const RECONNECT_DELAY = 3000;
 let reconnectTimeout = null;
 let heartbeatInterval = null;
 const HEARTBEAT_INTERVAL = 30000; // 30 секунд
+let isUserAuthenticated = false; // Флаг авторизации
 
 // Функция для закрытия WebSocket соединения
 function closeWebSocket() {
@@ -171,9 +172,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 toggleChatBtn.style.display = "none";
                 dialog.classList.add('expanded-chat');
                 
-                // Подключаем WebSocket
-                if (!ws && !isConnecting) {
+                // Подключаем WebSocket, если пользователь авторизован
+                if (isUserAuthenticated && !ws && !isConnecting) {
                     connectWebSocket();
+                } else if (!isUserAuthenticated) {
+                    addMessage('Пожалуйста, авторизуйтесь, чтобы начать чат.', 'error');
                 }
             }
         });
@@ -182,8 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Добавляем обработчик отправки сообщений
     if (chatInput && sendButton) {
         const sendMessage = () => {
+            if (!isUserAuthenticated) {
+                addMessage('Необходимо авторизоваться для отправки сообщений.', 'error');
+                return;
+            }
+
             if (!isWebSocketReady || !ws) {
                 console.log('[chat.js] Cannot send message: WebSocket not ready');
+                addMessage('Соединение не установлено. Попробуйте еще раз.', 'error');
                 return;
             }
 
@@ -252,27 +261,52 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function updateUIForAuthenticated(user) {
-        const authContainer = document.getElementById('auth-container');
-        const userInfo = document.getElementById('user-info');
-        
-        if (authContainer) authContainer.style.display = 'none';
-        if (userInfo) {
-            userInfo.style.display = 'flex';
-            const avatar = document.getElementById('user-avatar');
-            const username = document.getElementById('user-name');
-            const discriminator = document.getElementById('user-discriminator');
-            if(avatar) avatar.src = user.avatar;
-            if(username) username.textContent = user.username;
-            if(discriminator) discriminator.textContent = `#${user.discriminator}`;
+        const authContainer = document.querySelector('.auth-container');
+        if (authContainer) {
+            authContainer.innerHTML = `
+                <div class="user-info">
+                    <img src="https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png" alt="avatar" class="avatar">
+                    <span>${user.username}</span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Выход</button>
+            `;
+            initLogout();
+        }
+        isUserAuthenticated = true;
+        // Разблокируем чат
+        const chatInput = document.getElementById("chat-input");
+        const sendButton = document.getElementById("send-message");
+        if (chatInput && sendButton) {
+            chatInput.disabled = false;
+            sendButton.disabled = false;
+            chatInput.placeholder = "Введите ваше сообщение...";
+        }
+        // Подключаем WebSocket после успешной аутентификации, если чат открыт
+        const chatContainer = document.querySelector(".chat-container");
+        if (chatContainer && chatContainer.style.display === "block") {
+            if (!ws && !isConnecting) {
+                connectWebSocket();
+            }
         }
     }
 
     function updateUIForUnauthenticated() {
-        const authContainer = document.getElementById('auth-container');
-        const userInfo = document.getElementById('user-info');
-        
-        if (authContainer) authContainer.style.display = 'block';
-        if (userInfo) userInfo.style.display = 'none';
+        const authContainer = document.querySelector('.auth-container');
+        if (authContainer) {
+            authContainer.innerHTML = '<button class="discord-login-btn">Войти через Discord</button>';
+            initDiscordLogin();
+        }
+        isUserAuthenticated = false;
+        // Блокируем чат
+        const chatInput = document.getElementById("chat-input");
+        const sendButton = document.getElementById("send-message");
+        if (chatInput && sendButton) {
+            chatInput.disabled = true;
+            sendButton.disabled = true;
+            chatInput.placeholder = "Войдите, чтобы писать в чат";
+        }
+        // Отключаем WebSocket
+        closeWebSocket();
     }
 
     // Инициализация логики авторизации
