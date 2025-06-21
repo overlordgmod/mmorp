@@ -31,7 +31,7 @@ const server = http.createServer(app);
 const wss = new WebSocketServer({ server });
 
 // Maps to store active connections and channel mappings
-const clients = new Map();
+const clients = new Map(); // key: clientId, value: { ws, user }
 const discordChannelToClient = new Map();
 const clientToDiscordChannel = new Map();
 const activeConnections = new Set(); // Для отслеживания активных подключений
@@ -161,7 +161,7 @@ wss.on('connection', async (ws, req) => {
     
     let clientId = null;
 
-    ws.on('message', (message) => {
+    ws.on('message', async (message) => {
         try {
             const data = JSON.parse(message);
             console.log('[server.js] Received message:', data);
@@ -169,7 +169,7 @@ wss.on('connection', async (ws, req) => {
             if (data.type === 'init') {
                 clientId = data.clientId;
                 console.log('[server.js] Client initialized with ID:', clientId);
-                clients.set(clientId, ws);
+                clients.set(clientId, { ws, user });
             } else if (data.type === 'message' || data.type === 'chatMessage') {
                 if (!user) {
                     ws.send(JSON.stringify({
@@ -203,14 +203,24 @@ wss.on('connection', async (ws, req) => {
 
                     // Создаем новый канал
                     guild.channels.create({
-                        name: `support-${clientId}`,
+                        name: `support-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
                         type: ChannelType.GuildText,
                         parent: category.id,
-                        topic: `Support chat for client ${user.username} (${user.id})`
-                    }).then(channel => {
+                        topic: `Support chat for client ${user.username} (${user.id}) | ClientID: ${clientId}`
+                    }).then(async (channel) => {
                         discordChannelId = channel.id;
                         clientToDiscordChannel.set(clientId, discordChannelId);
                         discordChannelToClient.set(discordChannelId, clientId);
+
+                        if (user && user.id) {
+                            const userMessage = {
+                                author: user.username,
+                                content: data.message,
+                                timestamp: Date.now(),
+                                source: 'user'
+                            };
+                            await saveUserMessage(user.id, userMessage);
+                        }
 
                         // Отправляем сообщение в новый канал
                         channel.send(`**User ${user.username} (${user.id})**: ${data.message}`);
@@ -237,6 +247,16 @@ wss.on('connection', async (ws, req) => {
                     // Отправляем сообщение в существующий канал
                     const channel = client.channels.cache.get(discordChannelId);
                     if (channel) {
+                        if (user && user.id) {
+                            const userMessage = {
+                                author: user.username,
+                                content: data.message,
+                                timestamp: Date.now(),
+                                source: 'user'
+                            };
+                            await saveUserMessage(user.id, userMessage);
+                        }
+                        
                         channel.send(`**User ${user.username} (${user.id})**: ${data.message}`);
                         
                         // Отправляем только подтверждение отправки сообщения
@@ -409,17 +429,77 @@ async function saveMessage(message) {
     }
 }
 
+async function saveUserMessage(discordId, message) {
+    try {
+        const userMessagesRef = db.ref(`user_messages/${discordId}`);
+        await userMessagesRef.push(message);
+    } catch (error) {
+        console.error(`[server.js] Error saving message for user ${discordId}:`, error);
+    }
+}
+
+async function getUserHistory(discordId) {
+    try {
+        const userMessagesRef = db.ref(`user_messages/${discordId}`);
+        const snapshot = await userMessagesRef.limitToLast(100).once('value');
+        const messages = [];
+        snapshot.forEach((childSnapshot) => {
+            messages.push(childSnapshot.val());
+        });
+        return messages;
+    } catch (error) {
+        console.error(`[server.js] Error getting history for user ${discordId}:`, error);
+        return [];
+    }
+}
+
 // Обработка сообщений из Discord (ответы поддержки и объявления)
 client.on('messageCreate', async message => {
     // Игнорируем сообщения от ботов
     if (message.author.bot) return;
+
+    if (message.content.toLowerCase().startsWith('/showhistory')) {
+        const args = message.content.split(' ');
+        if (args.length < 2) {
+            return message.reply('Пожалуйста, укажите Discord ID пользователя. Пример: `/showhistory 123456789012345678`').catch(console.error);
+        }
+        const discordId = args[1];
+
+        if (!/^\d{17,19}$/.test(discordId)) {
+            return message.reply('Вы указали неверный Discord ID.').catch(console.error);
+        }
+
+        try {
+            const history = await getUserHistory(discordId);
+
+            if (history.length === 0) {
+                return message.reply(`История чата для пользователя с ID \`${discordId}\` не найдена.`).catch(console.error);
+            }
+
+            let historyText = `**История чата для ID ${discordId} (последние 100 сообщений):**\n\n`;
+            history.forEach(msg => {
+                const date = new Date(msg.timestamp).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' });
+                const source = msg.source === 'user' ? 'Пользователь' : 'Поддержка';
+                historyText += `[${date}] **${msg.author} (${source})**: ${msg.content}\n`;
+            });
+
+            const chunks = historyText.match(/[\s\S]{1,1990}/g) || [];
+            for (const chunk of chunks) {
+                await message.channel.send(`\`\`\`\n${chunk}\n\`\`\``).catch(console.error);
+            }
+        } catch (error) {
+            console.error('Error fetching or sending history:', error);
+            message.reply('Произошла ошибка при получении истории чата.').catch(console.error);
+        }
+        return;
+    }
 
     // Обработка ответов поддержки
     if (discordChannelToClient.has(message.channel.id)) {
         // If message is in a support channel, check for commands
         if (message.content.toLowerCase() === '/ticketclose') {
             const clientId = discordChannelToClient.get(message.channel.id);
-            const targetWs = clients.get(clientId);
+            const targetWs = clients.get(clientId)?.ws;
 
             try {
                 // Send a final message to the website user if they are still connected
@@ -447,9 +527,21 @@ client.on('messageCreate', async message => {
             return; // Stop processing further if it was a command
         }
 
-        // Original logic for sending support messages to website
         const clientId = discordChannelToClient.get(message.channel.id);
-        const targetWs = clients.get(clientId);
+        const clientData = clients.get(clientId);
+
+        if (clientData && clientData.user && clientData.user.id) {
+            const supportMessage = {
+                author: message.author.username,
+                content: message.content,
+                timestamp: Date.now(),
+                source: 'support'
+            };
+            await saveUserMessage(clientData.user.id, supportMessage);
+        }
+
+        // Original logic for sending support messages to website
+        const targetWs = clientData?.ws;
 
         if (targetWs && targetWs.readyState === WebSocket.OPEN) {
             // Send the Discord message back to the correct website client
