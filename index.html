@@ -1928,7 +1928,7 @@
 <body>
   <div id="user-container">
     <a id="login-button" class="discord-button" style="cursor: pointer;">
-      <img src="discord_logo.jpg" alt="Discord" class="discord-logo">
+      <img src="discord_logotipo.png" alt="Discord" class="discord-logo">
       Войти через Discord
     </a>
     <div id="user-profile" style="display: none;">
@@ -2138,8 +2138,539 @@
   </div>
 </div>
 
-<script src="chat.js"></script>
-<script src="common.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById("helper-container");
+  const img = document.getElementById("helper-img");
+  const dialog = document.getElementById("helper-dialog");
+  const closeBtn = document.getElementById("close-dialog");
+  const nextBtn = document.getElementById("next-phrase");
+  const toggleChatBtn = document.getElementById("toggle-chat");
+  const textBox = dialog.querySelector(".dialog-text");
+  const chatContainer = dialog.querySelector(".chat-container");
+  const chatMessages = dialog.querySelector(".chat-messages");
+  const chatInput = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("send-message");
+
+  let phraseIndex = 0;
+  const phrases = [
+    "Нажми на слайды — это переходы по разделам.",
+    "Господин Эклер меня убьёт, я должен идти убираться.",
+    "Не забудь зайти на наш Discord сервер, там вы сможете найти новых друзей!",
+    "Поддержать проект можно нажав на панель с донатом.",
+    "Если есть вопросы или заметил неисправность, напиши мне в чате!"
+  ];
+
+  // Generate or retrieve unique client ID
+  let clientId = localStorage.getItem('clientId');
+  if (!clientId) {
+      clientId = 'user-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('clientId', clientId);
+  }
+  console.log(`Client ID: ${clientId}`);
+
+  // WebSocket connection
+  let ws;
+
+  function connectWebSocket() {
+      ws = new WebSocket('wss://overlord-mmorp.onrender.com');
+
+      ws.onopen = () => {
+          console.log('WebSocket connected.');
+          // Send initial message with client ID
+          ws.send(JSON.stringify({ type: 'init', clientId: clientId }));
+      };
+
+      ws.onmessage = event => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'message') {
+              // Если отправитель - поддержка (support), используем 'Администратор' как автора
+              const displayAuthor = data.sender === 'support' ? 'Администратор' : data.author;
+              addMessage(data.message, data.sender === 'support' ? 'bot' : data.sender, displayAuthor);
+          } else if (data.type === 'status') {
+              addMessage(data.message, 'bot');
+          } else if (data.type === 'error') {
+              addMessage(data.message, 'bot');
+              console.error('WebSocket error from server:', data.message);
+          }
+      };
+
+      ws.onclose = () => {
+          console.log('WebSocket disconnected. Attempting to reconnect in 5 seconds...');
+          setTimeout(connectWebSocket, 5000); // Reconnect on close
+      };
+
+      ws.onerror = error => {
+          console.error('WebSocket error:', error);
+          // Error handling, will usually trigger onclose
+      };
+  }
+
+  // Connect WebSocket when chat is toggled or page loads if chat was open
+  // For now, let's connect it on DOMContentLoaded, or when the chat is opened.
+  // It's better to connect when the chat is actually used to save resources.
+  // Let's connect when the user opens the chat for the first time.
+  
+  // Показываем Швепсика через 2 сек
+  if (!localStorage.getItem("hideShvepsik")) {
+    setTimeout(() => {
+      container.style.display = "flex";
+      container.style.opacity = "1";
+      container.style.pointerEvents = "auto";
+    }, 2000);
+  }
+
+  // Клик по Швепсику только открывает диалог, если скрыт
+  img.addEventListener("click", () => {
+    if (dialog.style.display === "none") {
+      dialog.style.display = "block";
+    }
+  });
+
+  // Крестик закрывает чат или весь диалог в зависимости от состояния
+  closeBtn.addEventListener("click", () => {
+    const isChatVisible = chatContainer.style.display !== "none";
+    
+    if (isChatVisible) {
+      // Если чат открыт - закрываем только чат
+      chatContainer.style.display = "none";
+      textBox.style.display = "block";
+      nextBtn.style.display = "block";
+      toggleChatBtn.style.display = "block";
+      toggleChatBtn.textContent = "💬";
+      if (dialog.classList.contains('expanded-chat')) {
+        dialog.classList.remove('expanded-chat');
+      }
+    } else {
+      // Если чат не открыт - закрываем весь диалог
+      dialog.style.display = "none";
+    }
+  });
+
+  // Стрелка листает подсказки
+  nextBtn.addEventListener("click", () => {
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    textBox.textContent = phrases[phraseIndex];
+  });
+
+  // Переключение чата
+  toggleChatBtn.addEventListener("click", () => {
+    const isChatVisible = chatContainer.style.display !== "none";
+    if (!isChatVisible) {
+      // Подключаем WebSocket при первом открытии чата
+      if (!ws) {
+        connectWebSocket();
+      }
+      // Show chat interface
+      chatContainer.style.display = "block";
+      textBox.style.display = "none";
+      nextBtn.style.display = "none";
+      toggleChatBtn.style.display = "none";
+      dialog.classList.add('expanded-chat');
+      
+      // Добавляем приветственное сообщение
+      addMessage('Добро пожаловать в чат поддержки! Здесь вы можете связаться с администрацией проекта.', 'bot');
+    }
+  });
+
+  // Отправка сообщения
+  function sendMessage() {
+    const message = chatInput.value.trim();
+    if (message && ws && ws.readyState === WebSocket.OPEN) {
+      addMessage(message, 'user');
+      ws.send(JSON.stringify({ type: 'chatMessage', clientId: clientId, message: message }));
+      chatInput.value = '';
+    } else if (!ws || ws.readyState !== WebSocket.OPEN) {
+      addMessage('Соединение с чатом не установлено. Пожалуйста, попробуйте позже.', 'bot');
+      // Пробуем переподключиться
+      connectWebSocket();
+    }
+  }
+
+  // Добавление сообщения в чат
+  function addMessage(text, type, author = null) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    let displayMessage = text;
+    if (author) {
+      displayMessage = `[${author}] ${text}`;
+    }
+    messageDiv.textContent = displayMessage;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  // Автосмена фраз
+  setInterval(() => {
+    if (dialog.style.display !== "none" && chatContainer.style.display === "none") {
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      textBox.textContent = phrases[phraseIndex];
+    }
+  }, 7000);
+});
+</script>
+
+<script>
+ const container = document.querySelector('.flying-particles');
+    const PARTICLE_COUNT = 80;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = document.createElement('span');
+
+      // случайная позиция по горизонтали
+      const x = Math.random() * 100; // в процентах
+      // задержка старта, чтобы не вылетали сразу все
+      const delay = Math.random() * 10; // в секундах
+      // длительность полёта (±20%)
+      const duration = 8 + Math.random() * 4; // сек
+
+      p.style.left = x + 'vw';
+      p.style.animationDuration = `${duration}s, ${4 + Math.random()*2}s`;
+      p.style.animationDelay = `${delay}s, ${delay}s`;
+
+      container.appendChild(p);
+    }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Анимация прогресса онлайн (1%)
+  const progress = 1;
+  const max = 100;
+  const path = document.querySelector('.semicircle-progress');
+  const length = 314; // длина дуги
+  const offset = length - (progress / max) * length;
+  if (path) path.style.strokeDashoffset = offset;
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function updateSemicircles() {
+    const semicircleLeft = document.querySelector('.main-semicircle-left');
+    const semicircleRight = document.querySelector('.main-semicircle-right');
+    const announcementBoard = document.querySelector('.announcement-board');
+    const characterPanels = document.querySelector('.character-panel-container');
+    const slider = document.querySelector('.slider');
+    
+    if (!semicircleLeft || !semicircleRight || !announcementBoard || !characterPanels || !slider) return;
+
+    const boardRect = announcementBoard.getBoundingClientRect();
+    const characterRect = characterPanels.getBoundingClientRect();
+    const sliderRect = slider.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Получаем позицию центра экрана
+    const centerY = viewportHeight / 2;
+    
+    // Определяем направление скролла
+    const scrollDirection = window.scrollY > (window.lastScrollY || 0) ? 'down' : 'up';
+    window.lastScrollY = window.scrollY;
+    
+    // Добавляем смещение для разных направлений скролла
+    const offset = scrollDirection === 'up' ? 300 : -150; // Увеличили смещение для обоих направлений
+    
+    // Проверяем, находится ли центр экрана между доской объявлений и описанием персонажей
+    const isInValidZone = centerY > (boardRect.bottom + offset) && centerY < (characterRect.top + offset);
+
+    // Вычисляем прогресс анимации для плавного появления/исчезновения
+    let progress = 0;
+    
+    if (isInValidZone) {
+      // Вычисляем, насколько близко мы к границам зоны
+      const distanceToBoard = centerY - (boardRect.bottom + offset);
+      const distanceToCharacters = (characterRect.top + offset) - centerY;
+      const minDistance = Math.min(distanceToBoard, distanceToCharacters);
+      const maxDistance = 200; // Максимальное расстояние для анимации
+      
+      // Если скроллим вниз и близко к концу, уменьшаем прогресс
+      if (scrollDirection === 'down' && distanceToCharacters < maxDistance) {
+        progress = Math.min(distanceToCharacters / maxDistance, 1);
+      } else {
+        progress = Math.min(minDistance / maxDistance, 1);
+      }
+    }
+
+    if (isInValidZone) {
+      // Если в допустимой зоне, показываем панели с плавной анимацией
+      semicircleLeft.classList.remove('hide');
+      semicircleRight.classList.remove('hide');
+      semicircleLeft.style.opacity = progress;
+      semicircleRight.style.opacity = progress;
+      semicircleLeft.style.transform = `translateY(-50%) translateX(${-50 * (1 - progress)}px)`;
+      semicircleRight.style.transform = `translateY(-50%) translateX(${50 * (1 - progress)}px)`;
+    } else {
+      // Если вне допустимой зоны, скрываем панели
+      semicircleLeft.classList.add('hide');
+      semicircleRight.classList.add('hide');
+    }
+  }
+
+  // Добавляем обработчики событий
+  window.addEventListener('scroll', updateSemicircles);
+  window.addEventListener('resize', updateSemicircles);
+  
+  // Инициализация при загрузке
+  updateSemicircles();
+});
+</script>
+
+<script>
+// Announcement Board Animation & Loading
+document.addEventListener('DOMContentLoaded', function() {
+  const board = document.querySelector('.announcement-board');
+  const header = document.querySelector('.announcement-header');
+  const announcementContainer = document.querySelector('.announcement-container');
+  let announcementsData = [];
+  let currentIndex = 0;
+  let isAutoPlaying = false;
+  let autoPlayTimeout;
+  let transitionTimeout;
+
+  // Function to fetch announcements from the server
+  async function fetchAnnouncements() {
+    try {
+      const response = await fetch('https://overlord-mmorp.onrender.com/api/announcements');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      announcementsData = await response.json();
+      console.log('Fetched announcements:', announcementsData);
+      renderAnnouncements();
+      // Reset and start autoplay if announcements are loaded
+      if (announcementsData.length > 0) {
+        isAutoPlaying = true;
+        startAutoPlay();
+      } else {
+        // If no announcements, show a default message or hide the board
+        announcementContainer.innerHTML = '<div class="announcement-panel active"><div class="announcement-content"><h3>Нет текущих объявлений</h3><p>Скоро здесь появятся новые объявления!</p></div></div>';
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      announcementContainer.innerHTML = '<div class="announcement-panel active"><div class="announcement-content"><h3>Ошибка загрузки объявлений</h3><p>Пожалуйста, попробуйте обновить страницу.</p></div></div>';
+    }
+  }
+
+  // Function to render announcements dynamically
+  function renderAnnouncements() {
+    announcementContainer.innerHTML = ''; // Clear existing content
+    if (announcementsData.length === 0) return;
+
+    announcementsData.forEach((announcement, index) => {
+      const panel = document.createElement('div');
+      panel.className = 'announcement-panel';
+      panel.dataset.index = index;
+
+      let imageHtml = '';
+      if (announcement.imageUrl) {
+        imageHtml = `<img src="${announcement.imageUrl}" alt="${announcement.title}">`;
+      }
+
+      panel.innerHTML = `
+        ${imageHtml}
+        <div class="announcement-content">
+          <h3>${announcement.title}</h3>
+          <p>${announcement.content}</p>
+        </div>
+      `;
+      announcementContainer.appendChild(panel);
+    });
+    updatePanels(); // Apply initial active/prev classes
+  }
+
+  function updatePanels() {
+    const panels = announcementContainer.querySelectorAll('.announcement-panel');
+    if (panels.length === 0) return;
+
+    panels.forEach((panel, index) => {
+      panel.classList.remove('active', 'prev', 'prev2', 'prev3');
+      panel.style.zIndex = 1; // Reset z-index
+      panel.style.opacity = 0;
+      panel.style.transform = 'translateX(150%)';
+
+      // Убираем скролл у всех панелей
+      const content = panel.querySelector('.announcement-content');
+      if (content) {
+        content.classList.remove('scrollable');
+      }
+
+      if (index === currentIndex) {
+        panel.classList.add('active');
+        panel.style.zIndex = 4;
+        panel.style.opacity = 1;
+        panel.style.transform = 'translateX(-50%)';
+        
+        // Добавляем скролл только для активной панели, если контент не помещается
+        const activeContent = panel.querySelector('.announcement-content');
+        if (activeContent && activeContent.scrollHeight > activeContent.clientHeight) {
+          activeContent.classList.add('scrollable');
+        }
+      } else if (index === (currentIndex + 1) % panels.length) {
+        panel.classList.add('prev');
+        panel.style.zIndex = 3;
+        panel.style.opacity = 0.7;
+        panel.style.transform = 'translateX(calc(-50% + 30%))';
+      } else if (index === (currentIndex + 2) % panels.length) {
+        panel.classList.add('prev2');
+        panel.style.zIndex = 2;
+        panel.style.opacity = 0.4;
+        panel.style.transform = 'translateX(calc(-50% + 60%))';
+      } else if (index === (currentIndex + 3) % panels.length) {
+        panel.classList.add('prev3');
+        panel.style.zIndex = 1;
+        panel.style.opacity = 0.1;
+        panel.style.transform = 'translateX(calc(-50% + 90%))';
+      }
+    });
+  }
+
+  function nextPanel() {
+    if (announcementsData.length === 0) return;
+    currentIndex = (currentIndex + 1) % announcementsData.length;
+    updatePanels();
+  }
+
+  function startAutoPlay() {
+    if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+    if (announcementsData.length > 1) { // Only auto-play if there's more than one announcement
+        autoPlayTimeout = setTimeout(() => {
+            nextPanel();
+            startAutoPlay();
+        }, 8000);
+    }
+  }
+
+  header.addEventListener('click', () => {
+    board.classList.toggle('expanded');
+    // Stop autoplay when expanded, restart when collapsed
+    if (board.classList.contains('expanded')) {
+      if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+      isAutoPlaying = false;
+    } else {
+      isAutoPlaying = true;
+      startAutoPlay();
+    }
+  });
+
+  // Add click listener to the container to handle clicks on panels themselves
+  announcementContainer.addEventListener('click', (e) => {
+    const clickedPanel = e.target.closest('.announcement-panel');
+    if (clickedPanel) {
+      const clickedIndex = parseInt(clickedPanel.dataset.index);
+      
+      // Останавливаем автопрокрутку при клике
+      if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+      isAutoPlaying = false;
+
+      // Устанавливаем текущий индекс
+      currentIndex = clickedIndex;
+      updatePanels();
+
+      // Запускаем таймер на 10 секунд
+      setTimeout(() => {
+        // Возвращаем автопрокрутку
+        isAutoPlaying = true;
+        startAutoPlay();
+      }, 10000);
+    }
+  });
+
+  // Initial fetch and render
+  fetchAnnouncements();
+  // Remove old static initialization of showEachAnnouncement as we handle it dynamically
+});
+
+</script>
+    <script src="common.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginButton = document.getElementById('login-button');
+      const userProfile = document.getElementById('user-profile');
+      const userName = document.getElementById('user-name');
+      const userAvatar = document.getElementById('user-avatar');
+      const userStatus = document.getElementById('user-status');
+      const logoutButton = document.getElementById('logout-button');
+
+      const statuses = [
+        "Бравый гном", "Трусливый маг", "Загадочный эльф", "Могучий орк",
+        "Хитрый гоблин", "Спящий дракон", "Начинающий герой", "Король тыкв",
+        "Потерянный во времени", "Мастер над монетой"
+      ];
+
+      // Функция для получения случайного статуса
+      const getRandomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
+
+      // Функция для обновления UI
+      const updateUI = (user) => {
+        if (user) {
+          loginButton.style.display = 'none';
+          userProfile.style.display = 'flex';
+          userName.textContent = user.username;
+          userAvatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+          
+          // Проверяем, есть ли сохраненный статус, иначе генерируем новый
+          let savedStatus = localStorage.getItem(`user-status-${user.id}`);
+          if (!savedStatus) {
+            savedStatus = getRandomStatus();
+            localStorage.setItem(`user-status-${user.id}`, savedStatus);
+          }
+          userStatus.textContent = savedStatus;
+
+        } else {
+          loginButton.style.display = 'flex';
+          userProfile.style.display = 'none';
+        }
+      };
+
+      loginButton.addEventListener('click', () => {
+        const width = 600, height = 750;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+        const authUrl = '/auth/discord';
+        const authWindow = window.open(authUrl, 'discordAuth', `width=${width},height=${height},top=${top},left=${left}`);
+        if (window.focus) {
+            authWindow.focus();
+        }
+      });
+      
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'authSuccess') {
+            updateUI(event.data.user);
+        }
+      });
+
+      fetch('/auth/session')
+        .then(res => res.json())
+        .then(data => {
+          if (data.authenticated && data.user) {
+            updateUI(data.user);
+          } else {
+            updateUI(null);
+          }
+        })
+        .catch(() => updateUI(null));
+
+      logoutButton.addEventListener('click', () => {
+        fetch('/auth/logout', { method: 'POST' })
+          .then(() => {
+             const profileAvatarSrc = userAvatar.src;
+             const idFromAvatar = profileAvatarSrc.split('/')[4];
+             if(idFromAvatar) {
+                localStorage.removeItem(`user-status-${idFromAvatar}`);
+             }
+            window.location.href = '/';
+          });
+      });
+    });
+  </script>
 
 </body>
 </html>
