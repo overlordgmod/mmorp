@@ -1,0 +1,2676 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Battle For Yggdrasil | Главная</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #0d0d16;
+      color: #fff;
+      overflow-x: hidden;
+      user-select: none;
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+    }
+
+    /* Common panel styles */
+    .info-panel,
+    .donate-panel,
+    .character-panel,
+    .sebas-panel-container .character-panel,
+    .albedo-panel-container .character-panel,
+    .demiurge-panel-container .character-panel,
+    .cocytus-panel-container .character-panel,
+    .shalltear-panel-container .character-panel,
+    .aura-mare-panel-container .character-panel {
+      background: rgba(28,28,46,0.5);
+      backdrop-filter: blur(10px);
+      border: none;
+      display: flex;
+      align-items: center;
+      padding: 60px;
+      border-radius: 12px;
+      transform: translateX(-100%);
+      opacity: 0;
+      transition: transform 1s ease, opacity 1s ease;
+      width: 80vw;
+      max-width: 900px;
+      cursor: pointer;
+      z-index: 1;
+    }
+
+    .info-panel.visible,
+    .donate-panel.visible,
+    .character-panel.visible,
+    .sebas-panel-container .character-panel.visible,
+    .albedo-panel-container .character-panel.visible,
+    .demiurge-panel-container .character-panel.visible,
+    .cocytus-panel-container .character-panel.visible,
+    .shalltear-panel-container .character-panel.visible,
+    .aura-mare-panel-container .character-panel.visible {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    /* Common container styles */
+    .info-panel-container,
+    .donate-panel-container,
+    .character-panel-container,
+    .sebas-panel-container,
+    .albedo-panel-container,
+    .demiurge-panel-container,
+    .cocytus-panel-container,
+    .shalltear-panel-container,
+    .aura-mare-panel-container {
+      position: relative;
+      width: fit-content;
+      margin: 50px auto;
+      overflow: visible;
+    }
+
+    .flying-particles {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    .flying-particles span {
+      position: absolute;
+      width: 4px; height: 4px;
+      background: rgba(185,145,249,0.5);
+      border-radius: 50%;
+      animation: riseUp linear infinite, shimmer ease-in-out infinite;
+    }
+    @keyframes riseUp {
+      0%   { transform: translateY(100vh) scale(1); opacity: 0; }
+      10%  { opacity: 1; }
+      100% { transform: translateY(-200vh) scale(0.2); opacity: 0; }
+    }
+    @keyframes shimmer {
+      0%,100% { filter: brightness(1); }
+      50%     { filter: brightness(1.7); }
+    }
+
+#helper-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  animation: slideIn 1s ease forwards;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#helper-img {
+  width: 80px;
+  height: auto;
+  cursor: pointer;
+  transition: transform 0.3s;
+  pointer-events: auto;
+}
+
+#helper-dialog {
+  background: rgba(30, 30, 60, 0.9);
+  border: 1px solid #b891f9;
+  border-radius: 10px;
+  padding: 15px 20px;
+  color: #fff;
+  max-width: 260px;
+  font-size: 0.9em;
+  position: relative;
+  pointer-events: auto;
+  transition: max-width 0.4s ease, max-height 0.4s ease, padding 0.4s ease;
+}
+
+#helper-dialog.expanded-chat {
+  max-width: 450px;
+  padding: 20px;
+}
+
+.dialog-text {
+  margin-right: 20px;
+  margin-bottom: 30px; /* Добавляем отступ снизу для текста */
+}
+
+.chat-container {
+  margin-top: 10px;
+  border-top: 1px solid rgba(184,145,249,0.3);
+  padding-top: 10px;
+}
+
+.chat-messages {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.chat-message {
+  background: rgba(28,28,46,0.7);
+  padding: 8px;
+  margin: 5px 0;
+  border-radius: 5px;
+  font-size: 0.9em;
+}
+
+.chat-message.user {
+  background: rgba(184,145,249,0.2);
+  margin-left: 20px;
+}
+
+.chat-message.bot {
+  background: rgba(252,163,17,0.2);
+  margin-right: 20px;
+}
+
+.chat-input-container {
+  display: flex;
+  gap: 5px;
+}
+
+#chat-input {
+  flex: 1;
+  background: rgba(28,28,46,0.7);
+  border: 1px solid rgba(184,145,249,0.3);
+  border-radius: 5px;
+  padding: 8px;
+  color: #fff;
+}
+
+#send-message {
+  background: #b891f9;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+#send-message:hover {
+  background: #9b7ad6;
+}
+
+#close-dialog {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.3s;
+}
+
+#close-dialog:hover {
+  color: #fff;
+}
+
+#next-phrase {
+  position: absolute;
+  bottom: 10px;
+  right: 10px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.3s;
+}
+
+#next-phrase:hover {
+  color: #fff;
+}
+
+#toggle-chat {
+  position: absolute;
+  bottom: 10px;
+  right: 40px;
+  font-size: 1.2em;
+  cursor: pointer;
+  color: #ccc;
+  transition: color 0.3s;
+}
+
+#toggle-chat:hover {
+  color: #fff;
+}
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes fadeGlow {
+      0% { opacity: 0; transform: scale(0.95); text-shadow: 0 0 0px #b891f9; }
+      100% { opacity: 1; transform: scale(1); text-shadow: 0 0 30px #b891f9; }
+    }
+
+    @keyframes rotate {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes particleRise {
+      0% { transform: translateY(0) scale(1); opacity: 1; }
+      100% { transform: translateY(-80px) scale(0.5); opacity: 0; }
+    }
+
+    @keyframes shimmer {
+      0%, 100% { filter: brightness(1); }
+      50% { filter: brightness(1.7); }
+    }
+
+    
+
+    .slider { 
+      position: relative; 
+      width: 100%; 
+      height: 100vh; 
+      overflow: hidden; 
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(184, 145, 249, 0.2);
+    }
+
+    .overlay-title-wrapper {
+      position: absolute;
+      top: 30px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      z-index: 5;
+      pointer-events: none;
+      animation: fadeGlow 1.5s ease-out forwards;
+    }
+
+   .overlay-title {
+  font-family: 'Cinzel Decorative', cursive;
+  font-size: min(6em, 8vw);
+  color: #b891f9;
+  -webkit-text-stroke: 1px black;
+  text-shadow:
+    0 0 5px #b891f9,
+    2px 2px 0 #000,
+    4px 4px 10px #000;
+}
+
+
+    .overlay-emblem-wrapper {
+      position: relative;
+      display: inline-block;
+      pointer-events: auto;
+    }
+
+    .overlay-emblem {
+      height: min(180px, 12vw);
+      width: min(180px, 12vw);
+      filter: drop-shadow(0 0 20px #b891f9);
+      opacity: 1;
+      animation: fadeGlow 1.5s ease-out 0.3s forwards, rotate 12s linear infinite, shimmer 3s ease-in-out infinite;
+      transition: opacity 1s ease, transform 0.5s ease;
+    }
+
+    .overlay-emblem.hidden {
+      opacity: 0;
+      transform: scale(0);
+    }
+
+    .particles {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    .particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background-color: #b891f9;
+      border-radius: 50%;
+      opacity: 0;
+      animation: particleRise 2s ease-out infinite, shimmer 2s infinite;
+    }
+
+    .particle:nth-child(1) { left: -15px; animation-delay: 0s; }
+    .particle:nth-child(2) { left: -10px; animation-delay: 0.3s; }
+    .particle:nth-child(3) { left: -5px; animation-delay: 0.6s; }
+    .particle:nth-child(4) { left: 0px; animation-delay: 0.9s; }
+    .particle:nth-child(5) { left: 5px; animation-delay: 1.2s; }
+    .particle:nth-child(6) { left: 10px; animation-delay: 1.5s; }
+    .particle:nth-child(7) { left: 15px; animation-delay: 1.8s; }
+    .particle:nth-child(8) { left: -20px; animation-delay: 2.1s; }
+    .particle:nth-child(9) { left: 20px; animation-delay: 2.4s; }
+    .particle:nth-child(10) { left: -25px; animation-delay: 2.7s; }
+    .particle:nth-child(11) { left: 25px; animation-delay: 3s; }
+    .particle:nth-child(12) { left: -30px; animation-delay: 3.3s; }
+    .particle:nth-child(13) { left: 30px; animation-delay: 3.6s; }
+    .particle:nth-child(14) { left: -35px; animation-delay: 3.9s; }
+    .particle:nth-child(15) { left: 35px; animation-delay: 4.2s; }
+
+    .slide {
+      position: absolute; 
+      width: 100%; 
+      height: 100%;
+      background-size: cover; 
+      background-position: center;
+      opacity: 0; 
+      transition: opacity 1s ease; 
+      cursor: pointer;
+      border-radius: 20px;
+    }
+    .slide.active { 
+      opacity: 1; 
+      z-index: 2; 
+    }
+    .slide h2 {
+      position: absolute; 
+      top: 50%; 
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 3em; 
+      color: #fff;
+      text-shadow: 0 0 20px rgba(184, 145, 249, 0.8);
+      opacity: 0; 
+      transition: opacity 1s ease 0.5s;
+      background: rgba(28, 28, 46, 0.7);
+      padding: 20px 40px;
+      border-radius: 15px;
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(184, 145, 249, 0.3);
+    }
+    .slide.active h2 { 
+      opacity: 1; 
+    }
+    .nav-button {
+      position: absolute; 
+      top: 50%; 
+      transform: translateY(-50%);
+      background: rgba(28, 28, 46, 0.7); 
+      color: #b891f9; 
+      border: 1px solid rgba(184, 145, 249, 0.3);
+      border-radius: 12px; 
+      cursor: pointer;
+      font-size: 5em; 
+      padding: 30px 40px;
+      transition: all 0.3s ease; 
+      z-index: 3;
+      backdrop-filter: blur(5px);
+    }
+    .prev { left: 20px; } 
+    .next { right: 20px; }
+    .nav-button:hover { 
+      background: rgba(184, 145, 249, 0.2);
+      color: #fff;
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .info-panel .text,
+    .donate-panel .text,
+    .character-panel .cp-text {
+      font-size: 1.3em; line-height: 1.6; color: #ddd;
+    }
+
+    .info-panel img,
+    .donate-panel img,
+    .character-panel img,
+    .sebas-panel-container .side-img {
+      width: 160px; height: 160px;
+      object-fit: cover; margin-right: 30px;
+      border-radius: 8px;
+    }
+
+    .info-panel-container .hand,
+    .donate-panel-container .hand {
+      position: absolute; top: 50%; width: 100px; opacity: 0;
+      transition: transform 0.5s ease, opacity 0.5s ease; z-index: 2;
+    }
+    .info-panel-container .hand {
+      right: -140px; transform: translate(50%, -50%);
+    }
+    .donate-panel-container .hand {
+      left: -140px; transform: translate(-50%, -50%);
+    }
+    .info-panel-container:hover .hand,
+    .donate-panel-container:hover .hand {
+      transform: translate(0, -50%); opacity: 1;
+    }
+.hand-right {
+  position: absolute;
+  top: 50%;
+  right: -140px;
+  transform: translate(50%, -50%);
+  width: 100px;
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+  z-index: 2;
+}
+
+.info-panel-container:hover .hand-right {
+  transform: translate(0, -50%);
+  opacity: 1;
+}
+    @keyframes fadeInText { to { opacity: 1; } }
+    .character-panel .cp-text {
+      opacity: 0; animation: fadeInText 1s 0.3s forwards;
+    }
+
+    .side-img {
+      position: absolute;
+      width: auto;
+      height: min(300px, 15vw);
+      object-fit: unset;
+      opacity: 0;
+      transition: transform 1s ease, opacity 1s ease;
+    }
+    .side-img.left {
+      left: min(-260px, -10vw);
+      top: 50%;
+      transform: translate(-50px, -50%);
+    }
+    .side-img.right {
+      right: min(-260px, -10vw);
+      top: 50%;
+      transform: translate(50px, -50%);
+    }
+    .character-panel.visible ~ .side-img.left,
+    .character-panel.visible ~ .side-img.right {
+      transform: translate(0, -50%); opacity: 1;
+    }
+
+   .sebas-panel-container .side-img.left {
+  position: absolute;
+  top: 50%;
+  left: -60px;
+  transform: translate(50px, -50%);
+  height: auto;
+  max-height: 400px;
+  width: auto;
+  z-index: 5;
+}
+    .albedo-panel-container .side-img.right {
+      top: 50%;
+      right: -270px;
+      transform: translate(-50px, -50%);
+      height: auto;
+      max-height: 260px;
+      width: auto;
+      z-index: 5;
+    }
+
+    .separator {
+      width: 90vw; max-width: 1200px;
+      height: 1px; background: #444;
+      margin: 60px auto 20px;
+    }
+    .separator-title {
+      text-align: center; font-size: 1.6em;
+      margin-bottom: 40px; color: #fff;
+    }
+
+    footer {
+      text-align: center; padding: 20px;
+      font-size: 0.9em; color: #888;
+      background-color: #0b0b12; position: relative; z-index: 10;
+    }
+
+    @media (max-width: 768px) {
+      .overlay-title { 
+        font-size: min(4em, 10vw); 
+        top: 10px; 
+      }
+      .slide h2 { 
+        font-size: 1.5em;
+        padding: 15px 25px;
+        width: 90%;
+        text-align: center;
+      }
+      .nav-button { 
+        font-size: 2em; 
+        padding: 15px 20px; 
+      }
+      .info-panel, .donate-panel, .character-panel {
+        flex-direction: column; 
+        width: 95%; 
+        padding: 20px;
+        margin: 20px auto;
+      }
+      .info-panel img, .donate-panel img, .character-panel img {
+        width: 100px; 
+        height: 100px; 
+        margin: 0 auto 15px auto;
+      }
+      .info-panel .text, .donate-panel .text, .character-panel .cp-text {
+        text-align: center; 
+        font-size: 1em;
+        line-height: 1.4;
+      }
+      .info-panel-container .hand, .donate-panel-container .hand {
+        display: none;
+      }
+      .side-img { 
+        display: none; 
+      }
+      .separator-title {
+        font-size: 1.4em;
+        margin: 30px 0;
+      }
+      .announcement-panel {
+        width: 85%;
+        left: 50%;
+      }
+      .announcement-panel img {
+        width: 80px;
+        height: 80px;
+      }
+      .announcement-content h3 {
+        font-size: 1.2em;
+      }
+      .announcement-content p {
+        font-size: 0.9em;
+      }
+      .announcement-panel.prev {
+        transform: translateX(calc(-50% + 20%));
+      }
+
+      .announcement-panel.prev2 {
+        transform: translateX(calc(-50% + 40%));
+      }
+
+      .announcement-panel.prev3 {
+        transform: translateX(calc(-50% + 60%));
+      }
+
+      .announcement-board.expanded .announcement-container {
+        height: 160px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .overlay-title { 
+        font-size: 1.5em; 
+      }
+      .overlay-emblem {
+        height: 100px;
+        width: 100px;
+      }
+      .slide h2 { 
+        font-size: 1.2em;
+        padding: 10px 20px;
+      }
+      .nav-button { 
+        font-size: 1.5em; 
+        padding: 10px 15px; 
+      }
+    }
+
+    /* Side Panels Styles */
+    .side-panel {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 200px;
+      background: rgba(28,28,46,0.95);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(252,163,17,0.3);
+      border-radius: 12px;
+      padding: 20px;
+      z-index: 100;
+    }
+
+    .left-panel {
+      left: 20px;
+    }
+
+    .right-panel {
+      right: 20px;
+    }
+
+    .online-monitor {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .online-title {
+      color: #fca311;
+      font-size: 1.2em;
+      margin-bottom: 15px;
+    }
+
+    .circle-progress {
+      position: relative;
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+    }
+
+    .circle-progress svg {
+      transform: rotate(-90deg);
+    }
+
+    .circle-progress circle {
+      fill: none;
+      stroke-width: 8;
+    }
+
+    .circle-progress .bg {
+      stroke: rgba(255,255,255,0.1);
+    }
+
+    .circle-progress .progress {
+      stroke: #fca311;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .online-count {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.5em;
+      color: #fff;
+    }
+
+    .play-button {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .play-button:hover {
+      background: #ffb733;
+    }
+
+    @media (max-width: 1400px) {
+      .side-panel {
+        display: none;
+      }
+    }
+
+    .side-semicircle {
+      position: absolute;
+      top: 50%;
+      width: 180px;
+      height: 360px;
+      background: radial-gradient(ellipse at center, rgba(28,28,46,0.7) 80%, rgba(28,28,46,0.2) 100%);
+      box-shadow: 0 0 60px 0 #000a, 0 0 0 8px rgba(252,163,17,0.07) inset;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .side-semicircle.left {
+      left: -90px;
+      border-top-left-radius: 180px 360px;
+      border-bottom-left-radius: 180px 360px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+      flex-direction: column;
+    }
+    .side-semicircle.right {
+      right: -90px;
+      border-top-right-radius: 180px 360px;
+      border-bottom-right-radius: 180px 360px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+      flex-direction: column;
+    }
+    .side-semicircle .online-monitor,
+    .side-semicircle .play-button {
+      pointer-events: auto;
+      z-index: 2;
+    }
+    .side-semicircle .circle-progress {
+      position: relative;
+      width: 120px;
+      height: 240px;
+      margin: 0 auto;
+    }
+    .side-semicircle .online-count {
+      position: absolute;
+      top: 60%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 1.3em;
+      color: #fff;
+      text-shadow: 0 0 8px #000a;
+    }
+    .side-semicircle .play-button {
+      display: block;
+      width: 120px;
+      margin: 80px auto 0 auto;
+      padding: 18px 0;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 40px;
+      font-size: 1.3em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #0006;
+      transition: background 0.3s;
+    }
+    .side-semicircle .play-button:hover {
+      background: #ffb733;
+    }
+    .side-semicircle .semicircle-bg {
+      stroke: #fff2;
+    }
+    .side-semicircle .semicircle-progress {
+      stroke: #fca311;
+      stroke-dasharray: 314;
+      stroke-dashoffset: 282;
+      transition: stroke-dashoffset 0.5s;
+    }
+    @media (max-width: 1200px) {
+      .side-semicircle { display: none; }
+    }
+
+    .semicircle-bg-container {
+      position: relative;
+      width: 100vw;
+      height: 0;
+      min-height: 0;
+      z-index: 0;
+    }
+    .semicircle-bg {
+      pointer-events: none;
+    }
+    .semicircle-bg.left {
+      left: 0;
+    }
+    .semicircle-bg.right {
+      right: 0;
+    }
+    @media (max-width: 1200px) {
+      .semicircle-bg-container { display: none; }
+    }
+
+    .semicircle-bg-left, .semicircle-bg-right {
+      position: fixed;
+      top: 15%;
+      width: 480px;
+      height: 960px;
+      background: radial-gradient(ellipse at center, rgba(28,28,46,0.7) 80%, rgba(28,28,46,0.2) 100%);
+      z-index: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+    .semicircle-bg-left {
+      left: 0;
+      border-top-right-radius: 480px 960px;
+      border-bottom-right-radius: 480px 960px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    .semicircle-bg-right {
+      right: 0;
+      border-top-left-radius: 480px 960px;
+      border-bottom-left-radius: 480px 960px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .semicircle-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 2;
+    }
+    .online-title {
+      color: #fff;
+      font-size: 2.1em;
+      margin-bottom: 60px;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+    .online-count {
+      color: #fca311;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+      margin-top: 0;
+    }
+    .play-button {
+      display: block;
+      width: 220px;
+      margin: 0 auto;
+      padding: 32px 0;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 60px;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #0006;
+      transition: background 0.3s;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    .play-button:hover {
+      background: #ffb733;
+    }
+    @media (max-width: 1200px) {
+      .semicircle-bg-left, .semicircle-bg-right { display: none; }
+    }
+    .info-panel-container, .donate-panel-container {
+      margin-bottom: 32px;
+    }
+
+    .panels-with-bg {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto 40px auto;
+      min-height: 340px;
+      height: 340px;
+    }
+    .semicircle-bg-left, .semicircle-bg-right {
+      position: absolute;
+      top: 50%;
+      width: 340px;
+      height: 340px;
+      background: radial-gradient(ellipse at center, rgba(28,28,46,0.7) 80%, rgba(28,28,46,0.2) 100%);
+      z-index: 0;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .semicircle-bg-left {
+      left: -170px;
+      border-top-right-radius: 340px 340px;
+      border-bottom-right-radius: 340px 340px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    .semicircle-bg-right {
+      right: -170px;
+      border-top-left-radius: 340px 340px;
+      border-bottom-left-radius: 340px 340px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .semicircle-content-left, .semicircle-content-right {
+      position: absolute;
+      top: 50%;
+      width: 340px;
+      height: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 2;
+      transform: translateY(-50%);
+    }
+    .semicircle-content-left {
+      left: -170px;
+    }
+    .semicircle-content-right {
+      right: -170px;
+    }
+    .online-title {
+      color: #fff;
+      font-size: 2.1em;
+      margin-bottom: 60px;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+    .online-count {
+      color: #fca311;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+      margin-top: 0;
+    }
+    .play-button {
+      display: block;
+      width: 160px;
+      margin: 0 auto;
+      padding: 22px 0;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 40px;
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #0006;
+      transition: background 0.3s;
+      z-index: 2;
+    }
+    .play-button:hover {
+      background: #ffb733;
+    }
+    @media (max-width: 1200px) {
+      .semicircle-bg-left, .semicircle-bg-right, .semicircle-content-left, .semicircle-content-right { display: none; }
+    }
+
+    .panels-center {
+      position: relative;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto 60px auto;
+      min-height: 600px;
+    }
+    .semicircle-bg-left, .semicircle-bg-right {
+      position: absolute;
+      top: 50%;
+      width: 400px;
+      height: 800px;
+      background: radial-gradient(ellipse at center, rgba(28,28,46,0.7) 80%, rgba(28,28,46,0.2) 100%);
+      z-index: 0;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .semicircle-bg-left {
+      left: -200px;
+      border-top-right-radius: 400px 800px;
+      border-bottom-right-radius: 400px 800px;
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+    .semicircle-bg-right {
+      right: -200px;
+      border-top-left-radius: 400px 800px;
+      border-bottom-left-radius: 400px 800px;
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+    .semicircle-content-left, .semicircle-content-right {
+      position: absolute;
+      top: 50%;
+      width: 400px;
+      height: 800px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 2;
+      transform: translateY(-50%);
+    }
+    .semicircle-content-left {
+      left: -200px;
+    }
+    .semicircle-content-right {
+      right: -200px;
+    }
+    .online-title {
+      color: #fff;
+      font-size: 2.1em;
+      margin-bottom: 60px;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+    .online-count {
+      color: #fca311;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+    .play-button {
+      display: block;
+      width: 160px;
+      margin: 0 auto;
+      padding: 22px 0;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 40px;
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #0006;
+      transition: background 0.3s;
+      z-index: 2;
+      white-space: nowrap;
+    }
+    .play-button:hover {
+      background: #ffb733;
+    }
+    @media (max-width: 1200px) {
+      .semicircle-bg-left, .semicircle-bg-right, .semicircle-content-left, .semicircle-content-right { display: none; }
+    }
+
+    .main-semicircle-left, .main-semicircle-right {
+      position: fixed;
+      top: 50%;
+      width: min(320px, 12.5vw);
+      height: min(640px, 25vw);
+      background: radial-gradient(ellipse at center, rgba(28,28,46,0.7) 80%, rgba(28,28,46,0.2) 100%);
+      z-index: 0;
+      transform: translateY(-50%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      will-change: opacity, transform;
+    }
+
+    .main-semicircle-left {
+      left: 0;
+      border-top-right-radius: min(320px, 12.5vw) min(640px, 25vw);
+      border-bottom-right-radius: min(320px, 12.5vw) min(640px, 25vw);
+      border-top-left-radius: 0;
+      border-bottom-left-radius: 0;
+    }
+
+    .main-semicircle-right {
+      right: 0;
+      border-top-left-radius: min(320px, 12.5vw) min(640px, 25vw);
+      border-bottom-left-radius: min(320px, 12.5vw) min(640px, 25vw);
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .main-semicircle-left.hide, .main-semicircle-right.hide {
+      opacity: 0;
+      transform: translateY(-50%) translateX(-50px);
+      pointer-events: none;
+    }
+
+    .main-semicircle-right.hide {
+      transform: translateY(-50%) translateX(50px);
+    }
+
+    .main-semicircle-content {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: auto;
+      z-index: 2;
+    }
+
+    .main-online-title {
+      color: #fff;
+      font-size: 2.1em;
+      margin-bottom: 10px;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+
+    .main-online-count {
+      color: #fca311;
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 0 0 8px #000a;
+      white-space: nowrap;
+    }
+
+    .main-play-button {
+      display: block;
+      width: 160px;
+      margin: 0 auto;
+      padding: 22px 0;
+      background: #fca311;
+      color: #000;
+      border: none;
+      border-radius: 40px;
+      font-size: 2em;
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 2px 12px #0006;
+      transition: background 0.3s;
+      z-index: 2;
+      white-space: nowrap;
+    }
+
+    .main-play-button:hover {
+      background: #ffb733;
+    }
+
+    @media (max-width: 1200px) {
+      .main-semicircle-left, .main-semicircle-right {
+        width: min(280px, 15vw);
+        height: min(560px, 30vw);
+      }
+      
+      .main-semicircle-left {
+        border-top-right-radius: min(280px, 15vw) min(560px, 30vw);
+        border-bottom-right-radius: min(280px, 15vw) min(560px, 30vw);
+      }
+      
+      .main-semicircle-right {
+        border-top-left-radius: min(280px, 15vw) min(560px, 30vw);
+        border-bottom-left-radius: min(280px, 15vw) min(560px, 30vw);
+      }
+      
+      .side-img {
+        height: min(250px, 20vw);
+      }
+      
+      .side-img.left {
+        left: min(-200px, -8vw);
+      }
+      
+      .side-img.right {
+        right: min(-200px, -8vw);
+      }
+    }
+
+    .aura-mare-panel-container .side-img.left {
+      position: absolute;
+      top: 50%;
+      left: -100px;
+      transform: translate(50px, -50%);
+      height: auto;
+      max-height: 400px;
+      width: auto;
+      z-index: 5;
+    }
+
+    .aura-mare-panel-container .side-img.right {
+      position: absolute;
+      top: 50%;
+      right: -270px;
+      transform: translate(-50px, -50%);
+      height: auto;
+      max-height: 400px;
+      width: auto;
+      z-index: 5;
+    }
+
+    .shalltear-panel-container .side-img.left {
+      position: absolute;
+      top: 50%;
+      left: -250px;
+      transform: translate(50px, -50%);
+      height: auto;
+      max-height: 350px;
+      width: auto;
+      z-index: 5;
+    }
+
+    .cocytus-panel-container .side-img.right {
+      right: -210px;
+    }
+
+    .demiurge-panel-container .side-img.left {
+      position: absolute;
+      top: 50%;
+      left: -220px;
+      transform: translate(50px, -50%);
+      height: auto;
+      max-height: 400px;
+      width: auto;
+      z-index: 5;
+    }
+
+    .character-panel-container .side-img.left {
+      left: -245px;
+    }
+    .character-panel-container .side-img.right {
+      right: -245px;
+    }
+
+    /* Announcement Board Styles */
+    .announcement-board {
+      position: relative;
+      width: 100%;
+      margin: 20px 0;
+      padding: 20px 0;
+      background: rgba(28,28,46,0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 0;
+      border: 1px solid rgba(184,145,249,0.3);
+      overflow: hidden;
+      transition: all 0.5s ease;
+    }
+
+    .announcement-header {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      padding: 10px;
+    }
+
+    .announcement-title {
+      text-align: center;
+      color: #b891f9;
+      font-size: 2.5em;
+      margin: 0;
+      text-shadow: 0 0 10px rgba(184,145,249,0.5);
+    }
+
+    .toggle-button {
+      width: 40px;
+      height: 40px;
+      background: rgba(184,145,249,0.2);
+      border: 1px solid rgba(184,145,249,0.3);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #b891f9;
+      font-size: 1.5em;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-button:hover {
+      background: rgba(184,145,249,0.3);
+      transform: scale(1.1);
+    }
+
+    .announcement-container {
+      position: relative;
+      height: 0;
+      overflow: hidden;
+      width: 100%;
+      max-width: 1800px;
+      margin: 0 auto;
+      transition: height 0.5s ease;
+    }
+
+    .announcement-board.expanded .announcement-container {
+      height: 200px; /* Увеличиваем базовую высоту */
+    }
+
+    .announcement-board.expanded .toggle-button {
+      transform: rotate(180deg);
+    }
+
+    .announcement-panel {
+      position: absolute;
+      width: min(35%, 600px);
+      max-width: 600px;
+      height: 100%;
+      background: rgba(28,28,46,0.95);
+      border: 1px solid rgba(184,145,249,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      cursor: pointer;
+      transition: all 0.5s ease;
+      transform: translateX(150%);
+      opacity: 0;
+      z-index: 1;
+      left: 25%;
+    }
+
+    .announcement-panel:hover {
+      transform: translateX(-50%) scale(1.05);
+      box-shadow: 0 0 20px rgba(184,145,249,0.3);
+      border-color: rgba(184,145,249,0.6);
+      z-index: 5;
+      background: rgba(28,28,46,0.98);
+    }
+
+    .announcement-panel.active {
+      transform: translateX(-50%);
+      opacity: 1;
+      z-index: 4;
+      box-shadow: 0 0 30px rgba(184,145,249,0.4);
+      border-color: rgba(184,145,249,0.8);
+      background: rgba(28,28,46,0.98);
+    }
+
+    .announcement-panel.prev {
+      transform: translateX(calc(-50% + 30%));
+      opacity: 0.7;
+      z-index: 3;
+      background: rgba(28,28,46,0.9);
+    }
+
+    .announcement-panel.prev2 {
+      transform: translateX(calc(-50% + 60%));
+      opacity: 0.4;
+      z-index: 2;
+      background: rgba(28,28,46,0.85);
+    }
+
+    .announcement-panel.prev3 {
+      transform: translateX(calc(-50% + 90%));
+      opacity: 0.1;
+      z-index: 1;
+      background: rgba(28,28,46,0.8);
+    }
+
+    .announcement-panel img {
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .announcement-content {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 150px;
+      overflow-y: hidden; /* По умолчанию скрываем скролл */
+      padding-right: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .announcement-content.scrollable {
+      overflow-y: auto; /* Показываем скролл только когда есть класс scrollable */
+    }
+
+    /* Стилизация скроллбара */
+    .announcement-content.scrollable::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .announcement-content.scrollable::-webkit-scrollbar-track {
+      background: rgba(184,145,249,0.1);
+      border-radius: 3px;
+    }
+
+    .announcement-content.scrollable::-webkit-scrollbar-thumb {
+      background: rgba(184,145,249,0.3);
+      border-radius: 3px;
+    }
+
+    .announcement-content.scrollable::-webkit-scrollbar-thumb:hover {
+      background: rgba(184,145,249,0.5);
+    }
+
+    .announcement-content h3 {
+      color: #b891f9;
+      font-size: 1.5em;
+      margin: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+
+    .announcement-content p {
+      color: #fff;
+      font-size: 1.1em;
+      line-height: 1.4;
+      margin: 0;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      hyphens: auto;
+    }
+
+    @media (max-width: 768px) {
+      .announcement-panel {
+        width: 85%;
+        left: 50%;
+        padding: 15px;
+        gap: 15px;
+      }
+
+      .announcement-panel img {
+        width: 80px;
+        height: 80px;
+        flex-shrink: 0;
+      }
+
+      .announcement-content {
+        min-width: 0;
+        flex: 1;
+      }
+
+      .announcement-content h3 {
+        font-size: 1.2em;
+        margin-bottom: 5px;
+      }
+
+      .announcement-content p {
+        font-size: 0.9em;
+        line-height: 1.3;
+      }
+
+      .announcement-board.expanded .announcement-container {
+        height: 200px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .announcement-panel {
+        width: 90%;
+        padding: 12px;
+        gap: 12px;
+      }
+
+      .announcement-panel img {
+        width: 60px;
+        height: 60px;
+      }
+
+      .announcement-content h3 {
+        font-size: 1.1em;
+        margin-bottom: 4px;
+      }
+
+      .announcement-content p {
+        font-size: 0.85em;
+        line-height: 1.2;
+      }
+
+      .announcement-board.expanded .announcement-container {
+        height: 180px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .announcement-panel {
+        width: 95%;
+        padding: 10px;
+        gap: 10px;
+      }
+
+      .announcement-panel img {
+        width: 50px;
+        height: 50px;
+      }
+
+      .announcement-content h3 {
+        font-size: 1em;
+        margin-bottom: 3px;
+      }
+
+      .announcement-content p {
+        font-size: 0.8em;
+        line-height: 1.1;
+      }
+
+      .announcement-board.expanded .announcement-container {
+        height: 160px;
+      }
+    }
+
+    .chat-container {
+      margin-top: 10px;
+      border-top: 1px solid rgba(184,145,249,0.3);
+      padding-top: 10px;
+    }
+
+    .chat-messages {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+
+    #helper-dialog.expanded-chat .chat-messages {
+      max-height: 350px;
+    }
+
+    .chat-message {
+      background: rgba(28,28,46,0.7);
+      padding: 8px;
+      margin: 5px 0;
+      border-radius: 5px;
+      font-size: 0.9em;
+    }
+
+    .chat-message.user {
+      background: rgba(184,145,249,0.2);
+      margin-left: 20px;
+    }
+
+    .chat-message.bot {
+      background: rgba(252,163,17,0.2);
+      margin-right: 20px;
+    }
+
+    .chat-input-container {
+      display: flex;
+      gap: 5px;
+    }
+
+    #chat-input {
+      flex: 1;
+      background: rgba(28,28,46,0.7);
+      border: 1px solid rgba(184,145,249,0.3);
+      border-radius: 5px;
+      padding: 8px;
+      color: #fff;
+    }
+
+    #send-message {
+      background: #b891f9;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 15px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    #send-message:hover {
+      background: #9b7ad6;
+    }
+
+    #close-dialog {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #ccc;
+      transition: color 0.3s;
+    }
+
+    #close-dialog:hover {
+      color: #fff;
+    }
+
+    #next-phrase {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #ccc;
+      transition: color 0.3s;
+    }
+
+    #next-phrase:hover {
+      color: #fff;
+    }
+
+    #toggle-chat {
+      position: absolute;
+      bottom: 10px;
+      right: 40px;
+      font-size: 1.2em;
+      cursor: pointer;
+      color: #ccc;
+      transition: color 0.3s;
+    }
+
+    #toggle-chat:hover {
+      color: #fff;
+    }
+
+    /* Медиа-запрос для маленьких экранов */
+    @media screen and (max-width: 480px) {
+      #helper-dialog {
+        padding: 15px;
+        max-width: 240px;
+      }
+
+      .dialog-text {
+        margin-bottom: 35px; /* Увеличиваем отступ на маленьких экранах */
+        font-size: 0.85em;
+      }
+
+      #close-dialog {
+        top: 8px;
+        right: 8px;
+      }
+
+      #next-phrase {
+        bottom: 8px;
+        right: 8px;
+      }
+
+      #toggle-chat {
+        bottom: 8px;
+        right: 35px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .announcement-board.expanded .announcement-container {
+        height: 220px; /* Увеличиваем высоту для ноутбуков */
+      }
+
+      .announcement-content h3 {
+        font-size: 1.3em;
+        margin-bottom: 8px;
+      }
+
+      .announcement-content p {
+        font-size: 1em;
+        line-height: 1.4;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .announcement-board.expanded .announcement-container {
+        height: 200px;
+      }
+
+      .announcement-content h3 {
+        font-size: 1.2em;
+        margin-bottom: 6px;
+      }
+
+      .announcement-content p {
+        font-size: 0.95em;
+        line-height: 1.3;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .announcement-board.expanded .announcement-container {
+        height: 180px;
+      }
+
+      .announcement-content h3 {
+        font-size: 1.1em;
+        margin-bottom: 4px;
+      }
+
+      .announcement-content p {
+        font-size: 0.9em;
+        line-height: 1.2;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .announcement-board.expanded .announcement-container {
+        height: 160px;
+      }
+
+      .announcement-content h3 {
+        font-size: 1em;
+        margin-bottom: 3px;
+      }
+
+      .announcement-content p {
+        font-size: 0.85em;
+        line-height: 1.1;
+      }
+    }
+
+    .announcement-content.has-scroll {
+      position: relative;
+    }
+
+    .announcement-content.has-scroll::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 20px;
+      background: linear-gradient(transparent, rgba(28,28,46,0.95));
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .announcement-content.has-scroll:hover::after {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .announcement-content {
+        max-height: 120px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .announcement-content {
+        max-height: 100px;
+      }
+    }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    #user-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      background-color: rgba(30, 30, 60, 0.8);
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #b891f9;
+      backdrop-filter: blur(5px);
+    }
+
+    .discord-button {
+      display: flex;
+      align-items: center;
+      padding: 8px 15px;
+      background-color: #5865F2;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+
+    .discord-button:hover {
+      background-color: #4752C4;
+    }
+
+    .discord-logo {
+      width: 20px;
+      height: 20px;
+      margin-right: 10px;
+    }
+
+    #user-profile {
+      display: flex;
+      align-items: center;
+    }
+
+    #user-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      margin-right: 10px;
+      border: 2px solid #b891f9;
+    }
+
+    #user-info {
+      display: flex;
+      flex-direction: column;
+      color: white;
+    }
+
+    #user-name {
+      font-weight: bold;
+    }
+
+    #user-status {
+      font-size: 0.8em;
+      color: #ccc;
+    }
+    
+    #logout-button {
+      background: #b891f9;
+      border: none;
+      border-radius: 5px;
+      padding: 8px 12px;
+      color: #fff;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-left: 15px;
+    }
+
+    #logout-button:hover {
+        background: #9b7ad6;
+    }
+  </style>
+<script>
+  function initSlider() {
+    let current = 0;
+    const slides = document.querySelectorAll('.slide');
+    const panels = document.querySelectorAll(
+      '.info-panel, .donate-panel, .character-panel, .sebas-panel-container .character-panel, .albedo-panel-container .character-panel, .demiurge-panel-container .character-panel, .cocytus-panel-container .character-panel, .shalltear-panel-container .character-panel, .aura-mare-panel-container .character-panel'
+    );
+
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const slider = document.querySelector('.slider');
+
+    function show(i) {
+      slides.forEach(s => s.classList.remove('active'));
+      slides[i].classList.add('active');
+    }
+
+    window.prevSlide = () => {
+      current = (current - 1 + slides.length) % slides.length;
+      show(current);
+    };
+
+    window.nextSlide = () => {
+      current = (current + 1) % slides.length;
+      show(current);
+    };
+
+    // Добавляем обработчики свайпа
+    slider.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, false);
+
+    slider.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, false);
+
+    function handleSwipe() {
+      const swipeThreshold = 50; // минимальное расстояние для свайпа
+      const diff = touchStartX - touchEndX;
+
+      if (Math.abs(diff) > swipeThreshold) {
+        if (diff > 0) {
+          // Свайп влево
+          window.nextSlide();
+        } else {
+          // Свайп вправо
+          window.prevSlide();
+        }
+      }
+    }
+
+    // Оптимизированная функция проверки видимости панелей
+    const revealPanels = () => {
+      const viewportHeight = window.innerHeight;
+      panels.forEach(panel => {
+        const rect = panel.getBoundingClientRect();
+        panel.classList.toggle('visible',
+          rect.top < viewportHeight && rect.bottom > 0
+        );
+      });
+    };
+
+    // Инициализация
+    show(0);
+    revealPanels();
+
+    // Используем requestAnimationFrame для оптимизации скролла
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          revealPanels();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+
+  // Инициализация при загрузке страницы
+  document.addEventListener('DOMContentLoaded', initSlider);
+</script>
+
+</head>
+<body>
+  <div id="user-container">
+    <a id="login-button" class="discord-button" style="cursor: pointer;">
+      <img src="https://discord.com/assets/f8389ca1a7480c157de88ed16ddb0531.png" alt="Discord" class="discord-logo">
+      Войти через Discord
+    </a>
+    <div id="user-profile" style="display: none;">
+      <img id="user-avatar" src="" alt="Avatar">
+      <div id="user-info">
+        <span id="user-name"></span>
+        <span id="user-status"></span>
+      </div>
+       <button id="logout-button">Выйти</button>
+    </div>
+  </div>
+
+<div class="flying-particles"></div>
+
+<div class="main-semicircle-left">
+  <div class="main-semicircle-content">
+    <div class="online-title">Онлайн</div>
+    <div class="online-count">1/100</div>
+  </div>
+</div>
+
+<div class="main-semicircle-right">
+  <div class="main-semicircle-content">
+    <a href="steam://rungameid/4000" class="main-play-button">Играть</a>
+  </div>
+</div>
+
+<div class="slider">
+  <div class="overlay-title-wrapper">
+    <div class="overlay-emblem-wrapper">
+      <img src="gerb.png" alt="Герб" class="overlay-emblem">
+      <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+      </div>
+    </div>
+    <div class="overlay-title">
+      Battle for Yggdrasil
+    </div>
+  </div>
+
+  <div class="slide active" style="background-image:url('fractions1.png')" onclick="location.href='rules.html'"><h2>Основные правила сервера</h2></div>
+  <div class="slide" style="background-image:url('kingrules213.png')" onclick="location.href='fractions.html'"><h2>Правила фракций</h2></div>
+  <div class="slide" style="background-image:url('chatrules1.png')" onclick="location.href='chatrules.html'"><h2>Правила общения</h2></div>
+  <div class="slide" style="background-image:url('guilds.png')" onclick="location.href='Guilds.html'"><h2>Правила гильдий</h2></div>
+  <div class="slide" style="background-image:url('lor.png')" onclick="location.href='Lor.html'"><h2>Лор (История)</h2></div>
+  <button class="nav-button prev" onclick="prevSlide()">❮</button>
+  <button class="nav-button next" onclick="nextSlide()">❯</button>
+</div>
+
+<!-- Announcement Board -->
+<div class="announcement-board">
+  <div class="announcement-header">
+    <h2 class="announcement-title">Доска объявлений</h2>
+    <div class="toggle-button">▼</div>
+  </div>
+  <div class="announcement-container">
+    <!-- Объявления будут загружаться здесь динамически -->
+  </div>
+</div>
+
+<!-- Discord -->
+<div class="info-panel-container">
+  <div class="info-panel" onclick="window.open('https://discord.gg/kFSrV7TxMT','_blank')">
+    <img src="discord_logo.jpg" alt="Discord" loading="lazy" decoding="async">
+    <div class="text">
+      Присоединяйся к нашему официальному Discord-серверу Battle For Yggdrasil:<br>
+      общайся с командой, участвуй в ивентах и получай последние новости!
+    </div>
+  </div>
+  <img src="ainz_hand.png" alt="Hand" class="hand">
+</div>
+<!-- Donate -->
+<div class="donate-panel-container">
+  <div class="donate-panel" onclick="location.href='donate.html'">
+    <img src="donat.jpg" alt="Donate" loading="lazy" decoding="async">
+    <div class="text">
+      Поддержи проект Battle For Yggdrasil: перейди на страницу доната и получи бонусы!
+    </div>
+  </div>
+  <img src="ainzhand_left.png" alt="Hand" class="hand">
+</div>
+<!-- Steam Collection -->
+<div class="info-panel-container">
+  <div class="info-panel" onclick="window.open('https://steamcommunity.com/sharedfiles/filedetails/?id=ВАШ_ID','_blank')">
+    <img src="steamcollection.png" alt="Steam Collection" loading="lazy" decoding="async">
+    <div class="text">
+      Коллекция стим аддонов нашего сервера — установи всё нужное одним кликом и не пропусти ни одного важного мода!
+    </div>
+  </div>
+  <img src="ainz_hand.png" alt="Hand" class="hand hand-right">
+</div>
+
+<!-- separator -->
+<div class="separator"></div>
+<h2 class="separator-title">Краткое описание Лорных персонажей</h2>
+
+<!-- Ainz + Momon -->
+<div class="character-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Аинз Оул Гоун (псевдо «Момон») — могущественный Лич-король нежити, правитель великой гробницы Назарик, скрывающийся под маской благородного авантюриста-героя.
+    </div>
+  </div>
+  <img src="ainz.png" alt="Ainz" class="side-img left" loading="lazy" decoding="async">
+  <img src="momonga.png" alt="Momon" class="side-img right" loading="lazy" decoding="async">
+</div>
+
+<!-- Sebas -->
+<div class="sebas-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Себас Тиан — верный дворецкий и телохранитель семьи Шарктоп, мастер ближнего боя и искусный стратег, преданный своему господину без малейшего сомнения.
+    </div>
+  </div>
+  <img src="sebas.png" alt="Sebas" class="side-img left" loading="lazy" decoding="async">
+</div>
+
+<!-- Albedo -->
+<div class="albedo-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Альбедо — начальница Стражей Великой Гробницы Назарик. Обладает безупречным интеллектом, стратегическим мышлением и абсолютной преданностью Аинзу. За холодной внешностью скрывает пылающую любовь к своему господину.
+    </div>
+  </div>
+  <img src="albedo.png" alt="Albedo" class="side-img right" loading="lazy" decoding="async">
+</div>
+
+<!-- Demiurge -->
+<div class="demiurge-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Демиург — один из Стражей Этажей Великой Гробницы Назарик. Исключительно умен, расчетлив и безжалостен к врагам. Является главным стратегом и специалистом по пыткам. Верен Аинзу до последнего дыхания.
+    </div>
+  </div>
+  <img src="demon.png" alt="Demiurge" class="side-img left" loading="lazy" decoding="async">
+</div>
+
+<!-- Cocytus -->
+<div class="cocytus-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Коцит — Страж Пятого этажа Великой Гробницы Назарик. Воин чести, монстр с телом насекомого и душой самурая. Обладает непревзойдённой боевой мощью, безупречной дисциплиной и фанатичной преданностью Аинзу.
+    </div>
+  </div>
+  <img src="cocytus.png" alt="Cocytus" class="side-img right" loading="lazy" decoding="async">
+</div>
+
+<!-- Shalltear -->
+<div class="shalltear-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Шалтир  — Страж Третьего этажа Назарика. Вампир-аристократ, смертельно опасная, но внешне милая и женственная. Обладает невероятной силой и исступлённой любовью к Аинзу, ради которого готова на всё.
+    </div>
+  </div>
+  <img src="vampir.png" alt="Shalltear" class="side-img left" loading="lazy" decoding="async">
+</div>
+
+<!-- Aura & Mare -->
+<div class="aura-mare-panel-container">
+  <div class="character-panel">
+    <div class="cp-text">
+      Аура Белофиоре и Марэ Белофиоре — тёмные эльфы-близнецы, Стражи Шестого этажа Назарика.  
+      Аура — энергичная и боевитая охотница, управляет зверьми.  
+      Марэ — застенчивый, но невероятно мощный друид.  
+      Они дополняют друг друга и всегда действуют вместе, проявляя безусловную преданность Аинзу.
+    </div>
+  </div>
+  <img src="aura.webp" alt="Aura" class="side-img left" loading="lazy" decoding="async">
+  <img src="mare.png" alt="Mare" class="side-img right" loading="lazy" decoding="async">
+</div>
+
+  <!-- footer -->
+  <footer>© 2025 Battle For Yggdrasil — Все права защищены</footer>
+<!-- Швепсик — помощник -->
+<div id="helper-container">
+  <img id="helper-img" src="ecler.png" alt="Швепсик" title="Я Швепсик!" />
+  <div id="helper-dialog" style="display: block;">
+    <div class="dialog-text">Привет! Я Швепсик, заместитель Эклера. Нажми на стрелочку, чтобы узнать больше!</div>
+    <div class="chat-container" style="display: none;">
+      <div class="auth-message" style="display: none;">
+        <p>Для отправки сообщений необходимо авторизоваться через Discord</p>
+        <button class="discord-login-btn" style="display: flex;">
+          <img src="discord_logo.jpg" alt="Discord" />
+          Войти через Discord
+        </button>
+      </div>
+      <div class="chat-messages"></div>
+      <div class="chat-input-container">
+        <input type="text" id="chat-input" placeholder="Введите сообщение...">
+        <button id="send-message">Отправить</button>
+      </div>
+    </div>
+    <span id="close-dialog" title="Закрыть">✖</span>
+    <span id="next-phrase" title="Следующая фраза">➤</span>
+    <span id="toggle-chat" title="Открыть чат">💬</span>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById("helper-container");
+  const img = document.getElementById("helper-img");
+  const dialog = document.getElementById("helper-dialog");
+  const closeBtn = document.getElementById("close-dialog");
+  const nextBtn = document.getElementById("next-phrase");
+  const toggleChatBtn = document.getElementById("toggle-chat");
+  const textBox = dialog.querySelector(".dialog-text");
+  const chatContainer = dialog.querySelector(".chat-container");
+  const chatMessages = dialog.querySelector(".chat-messages");
+  const chatInput = document.getElementById("chat-input");
+  const sendBtn = document.getElementById("send-message");
+
+  let phraseIndex = 0;
+  const phrases = [
+    "Нажми на слайды — это переходы по разделам.",
+    "Господин Эклер меня убьёт, я должен идти убираться.",
+    "Не забудь зайти на наш Discord сервер, там вы сможете найти новых друзей!",
+    "Поддержать проект можно нажав на панель с донатом.",
+    "Если есть вопросы или заметил неисправность, напиши мне в чате!"
+  ];
+
+  // Generate or retrieve unique client ID
+  let clientId = localStorage.getItem('clientId');
+  if (!clientId) {
+      clientId = 'user-' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      localStorage.setItem('clientId', clientId);
+  }
+  console.log(`Client ID: ${clientId}`);
+
+  // WebSocket connection
+  let ws;
+
+  function connectWebSocket() {
+      ws = new WebSocket('wss://overlord-mmorp.onrender.com');
+
+      ws.onopen = () => {
+          console.log('WebSocket connected.');
+          // Send initial message with client ID
+          ws.send(JSON.stringify({ type: 'init', clientId: clientId }));
+      };
+
+      ws.onmessage = event => {
+          const data = JSON.parse(event.data);
+          if (data.type === 'message') {
+              // Если отправитель - поддержка (support), используем 'Администратор' как автора
+              const displayAuthor = data.sender === 'support' ? 'Администратор' : data.author;
+              addMessage(data.message, data.sender === 'support' ? 'bot' : data.sender, displayAuthor);
+          } else if (data.type === 'status') {
+              addMessage(data.message, 'bot');
+          } else if (data.type === 'error') {
+              addMessage(data.message, 'bot');
+              console.error('WebSocket error from server:', data.message);
+          }
+      };
+
+      ws.onclose = () => {
+          console.log('WebSocket disconnected. Attempting to reconnect in 5 seconds...');
+          setTimeout(connectWebSocket, 5000); // Reconnect on close
+      };
+
+      ws.onerror = error => {
+          console.error('WebSocket error:', error);
+          // Error handling, will usually trigger onclose
+      };
+  }
+
+  // Connect WebSocket when chat is toggled or page loads if chat was open
+  // For now, let's connect it on DOMContentLoaded, or when the chat is opened.
+  // It's better to connect when the chat is actually used to save resources.
+  // Let's connect when the user opens the chat for the first time.
+  
+  // Показываем Швепсика через 2 сек
+  if (!localStorage.getItem("hideShvepsik")) {
+    setTimeout(() => {
+      container.style.display = "flex";
+      container.style.opacity = "1";
+      container.style.pointerEvents = "auto";
+    }, 2000);
+  }
+
+  // Клик по Швепсику только открывает диалог, если скрыт
+  img.addEventListener("click", () => {
+    if (dialog.style.display === "none") {
+      dialog.style.display = "block";
+    }
+  });
+
+  // Крестик закрывает чат или весь диалог в зависимости от состояния
+  closeBtn.addEventListener("click", () => {
+    const isChatVisible = chatContainer.style.display !== "none";
+    
+    if (isChatVisible) {
+      // Если чат открыт - закрываем только чат
+      chatContainer.style.display = "none";
+      textBox.style.display = "block";
+      nextBtn.style.display = "block";
+      toggleChatBtn.style.display = "block";
+      toggleChatBtn.textContent = "💬";
+      if (dialog.classList.contains('expanded-chat')) {
+        dialog.classList.remove('expanded-chat');
+      }
+    } else {
+      // Если чат не открыт - закрываем весь диалог
+      dialog.style.display = "none";
+    }
+  });
+
+  // Стрелка листает подсказки
+  nextBtn.addEventListener("click", () => {
+    phraseIndex = (phraseIndex + 1) % phrases.length;
+    textBox.textContent = phrases[phraseIndex];
+  });
+
+  // Переключение чата
+  toggleChatBtn.addEventListener("click", () => {
+    const isChatVisible = chatContainer.style.display !== "none";
+    if (!isChatVisible) {
+      // Подключаем WebSocket при первом открытии чата
+      if (!ws) {
+        connectWebSocket();
+      }
+      // Show chat interface
+      chatContainer.style.display = "block";
+      textBox.style.display = "none";
+      nextBtn.style.display = "none";
+      toggleChatBtn.style.display = "none";
+      dialog.classList.add('expanded-chat');
+      
+      // Добавляем приветственное сообщение
+      addMessage('Добро пожаловать в чат поддержки! Здесь вы можете связаться с администрацией проекта.', 'bot');
+    }
+  });
+
+  // Отправка сообщения
+  function sendMessage() {
+    const message = chatInput.value.trim();
+    if (message && ws && ws.readyState === WebSocket.OPEN) {
+      addMessage(message, 'user');
+      ws.send(JSON.stringify({ type: 'chatMessage', clientId: clientId, message: message }));
+      chatInput.value = '';
+    } else if (!ws || ws.readyState !== WebSocket.OPEN) {
+      addMessage('Соединение с чатом не установлено. Пожалуйста, попробуйте позже.', 'bot');
+      // Пробуем переподключиться
+      connectWebSocket();
+    }
+  }
+
+  // Добавление сообщения в чат
+  function addMessage(text, type, author = null) {
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${type}`;
+    let displayMessage = text;
+    if (author) {
+      displayMessage = `[${author}] ${text}`;
+    }
+    messageDiv.textContent = displayMessage;
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  sendBtn.addEventListener("click", sendMessage);
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      sendMessage();
+    }
+  });
+
+  // Автосмена фраз
+  setInterval(() => {
+    if (dialog.style.display !== "none" && chatContainer.style.display === "none") {
+      phraseIndex = (phraseIndex + 1) % phrases.length;
+      textBox.textContent = phrases[phraseIndex];
+    }
+  }, 7000);
+});
+</script>
+
+<script>
+ const container = document.querySelector('.flying-particles');
+    const PARTICLE_COUNT = 80;
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = document.createElement('span');
+
+      // случайная позиция по горизонтали
+      const x = Math.random() * 100; // в процентах
+      // задержка старта, чтобы не вылетали сразу все
+      const delay = Math.random() * 10; // в секундах
+      // длительность полёта (±20%)
+      const duration = 8 + Math.random() * 4; // сек
+
+      p.style.left = x + 'vw';
+      p.style.animationDuration = `${duration}s, ${4 + Math.random()*2}s`;
+      p.style.animationDelay = `${delay}s, ${delay}s`;
+
+      container.appendChild(p);
+    }
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Анимация прогресса онлайн (1%)
+  const progress = 1;
+  const max = 100;
+  const path = document.querySelector('.semicircle-progress');
+  const length = 314; // длина дуги
+  const offset = length - (progress / max) * length;
+  if (path) path.style.strokeDashoffset = offset;
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  function updateSemicircles() {
+    const semicircleLeft = document.querySelector('.main-semicircle-left');
+    const semicircleRight = document.querySelector('.main-semicircle-right');
+    const announcementBoard = document.querySelector('.announcement-board');
+    const characterPanels = document.querySelector('.character-panel-container');
+    const slider = document.querySelector('.slider');
+    
+    if (!semicircleLeft || !semicircleRight || !announcementBoard || !characterPanels || !slider) return;
+
+    const boardRect = announcementBoard.getBoundingClientRect();
+    const characterRect = characterPanels.getBoundingClientRect();
+    const sliderRect = slider.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+    
+    // Получаем позицию центра экрана
+    const centerY = viewportHeight / 2;
+    
+    // Определяем направление скролла
+    const scrollDirection = window.scrollY > (window.lastScrollY || 0) ? 'down' : 'up';
+    window.lastScrollY = window.scrollY;
+    
+    // Добавляем смещение для разных направлений скролла
+    const offset = scrollDirection === 'up' ? 300 : -150; // Увеличили смещение для обоих направлений
+    
+    // Проверяем, находится ли центр экрана между доской объявлений и описанием персонажей
+    const isInValidZone = centerY > (boardRect.bottom + offset) && centerY < (characterRect.top + offset);
+
+    // Вычисляем прогресс анимации для плавного появления/исчезновения
+    let progress = 0;
+    
+    if (isInValidZone) {
+      // Вычисляем, насколько близко мы к границам зоны
+      const distanceToBoard = centerY - (boardRect.bottom + offset);
+      const distanceToCharacters = (characterRect.top + offset) - centerY;
+      const minDistance = Math.min(distanceToBoard, distanceToCharacters);
+      const maxDistance = 200; // Максимальное расстояние для анимации
+      
+      // Если скроллим вниз и близко к концу, уменьшаем прогресс
+      if (scrollDirection === 'down' && distanceToCharacters < maxDistance) {
+        progress = Math.min(distanceToCharacters / maxDistance, 1);
+      } else {
+        progress = Math.min(minDistance / maxDistance, 1);
+      }
+    }
+
+    if (isInValidZone) {
+      // Если в допустимой зоне, показываем панели с плавной анимацией
+      semicircleLeft.classList.remove('hide');
+      semicircleRight.classList.remove('hide');
+      semicircleLeft.style.opacity = progress;
+      semicircleRight.style.opacity = progress;
+      semicircleLeft.style.transform = `translateY(-50%) translateX(${-50 * (1 - progress)}px)`;
+      semicircleRight.style.transform = `translateY(-50%) translateX(${50 * (1 - progress)}px)`;
+    } else {
+      // Если вне допустимой зоны, скрываем панели
+      semicircleLeft.classList.add('hide');
+      semicircleRight.classList.add('hide');
+    }
+  }
+
+  // Добавляем обработчики событий
+  window.addEventListener('scroll', updateSemicircles);
+  window.addEventListener('resize', updateSemicircles);
+  
+  // Инициализация при загрузке
+  updateSemicircles();
+});
+</script>
+
+<script>
+// Announcement Board Animation & Loading
+document.addEventListener('DOMContentLoaded', function() {
+  const board = document.querySelector('.announcement-board');
+  const header = document.querySelector('.announcement-header');
+  const announcementContainer = document.querySelector('.announcement-container');
+  let announcementsData = [];
+  let currentIndex = 0;
+  let isAutoPlaying = false;
+  let autoPlayTimeout;
+  let transitionTimeout;
+
+  // Function to fetch announcements from the server
+  async function fetchAnnouncements() {
+    try {
+      const response = await fetch('https://overlord-mmorp.onrender.com/api/announcements');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      announcementsData = await response.json();
+      console.log('Fetched announcements:', announcementsData);
+      renderAnnouncements();
+      // Reset and start autoplay if announcements are loaded
+      if (announcementsData.length > 0) {
+        isAutoPlaying = true;
+        startAutoPlay();
+      } else {
+        // If no announcements, show a default message or hide the board
+        announcementContainer.innerHTML = '<div class="announcement-panel active"><div class="announcement-content"><h3>Нет текущих объявлений</h3><p>Скоро здесь появятся новые объявления!</p></div></div>';
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      announcementContainer.innerHTML = '<div class="announcement-panel active"><div class="announcement-content"><h3>Ошибка загрузки объявлений</h3><p>Пожалуйста, попробуйте обновить страницу.</p></div></div>';
+    }
+  }
+
+  // Function to render announcements dynamically
+  function renderAnnouncements() {
+    announcementContainer.innerHTML = ''; // Clear existing content
+    if (announcementsData.length === 0) return;
+
+    announcementsData.forEach((announcement, index) => {
+      const panel = document.createElement('div');
+      panel.className = 'announcement-panel';
+      panel.dataset.index = index;
+
+      let imageHtml = '';
+      if (announcement.imageUrl) {
+        imageHtml = `<img src="${announcement.imageUrl}" alt="${announcement.title}">`;
+      }
+
+      panel.innerHTML = `
+        ${imageHtml}
+        <div class="announcement-content">
+          <h3>${announcement.title}</h3>
+          <p>${announcement.content}</p>
+        </div>
+      `;
+      announcementContainer.appendChild(panel);
+    });
+    updatePanels(); // Apply initial active/prev classes
+  }
+
+  function updatePanels() {
+    const panels = announcementContainer.querySelectorAll('.announcement-panel');
+    if (panels.length === 0) return;
+
+    panels.forEach((panel, index) => {
+      panel.classList.remove('active', 'prev', 'prev2', 'prev3');
+      panel.style.zIndex = 1; // Reset z-index
+      panel.style.opacity = 0;
+      panel.style.transform = 'translateX(150%)';
+
+      // Убираем скролл у всех панелей
+      const content = panel.querySelector('.announcement-content');
+      if (content) {
+        content.classList.remove('scrollable');
+      }
+
+      if (index === currentIndex) {
+        panel.classList.add('active');
+        panel.style.zIndex = 4;
+        panel.style.opacity = 1;
+        panel.style.transform = 'translateX(-50%)';
+        
+        // Добавляем скролл только для активной панели, если контент не помещается
+        const activeContent = panel.querySelector('.announcement-content');
+        if (activeContent && activeContent.scrollHeight > activeContent.clientHeight) {
+          activeContent.classList.add('scrollable');
+        }
+      } else if (index === (currentIndex + 1) % panels.length) {
+        panel.classList.add('prev');
+        panel.style.zIndex = 3;
+        panel.style.opacity = 0.7;
+        panel.style.transform = 'translateX(calc(-50% + 30%))';
+      } else if (index === (currentIndex + 2) % panels.length) {
+        panel.classList.add('prev2');
+        panel.style.zIndex = 2;
+        panel.style.opacity = 0.4;
+        panel.style.transform = 'translateX(calc(-50% + 60%))';
+      } else if (index === (currentIndex + 3) % panels.length) {
+        panel.classList.add('prev3');
+        panel.style.zIndex = 1;
+        panel.style.opacity = 0.1;
+        panel.style.transform = 'translateX(calc(-50% + 90%))';
+      }
+    });
+  }
+
+  function nextPanel() {
+    if (announcementsData.length === 0) return;
+    currentIndex = (currentIndex + 1) % announcementsData.length;
+    updatePanels();
+  }
+
+  function startAutoPlay() {
+    if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+    if (announcementsData.length > 1) { // Only auto-play if there's more than one announcement
+        autoPlayTimeout = setTimeout(() => {
+            nextPanel();
+            startAutoPlay();
+        }, 8000);
+    }
+  }
+
+  header.addEventListener('click', () => {
+    board.classList.toggle('expanded');
+    // Stop autoplay when expanded, restart when collapsed
+    if (board.classList.contains('expanded')) {
+      if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+      isAutoPlaying = false;
+    } else {
+      isAutoPlaying = true;
+      startAutoPlay();
+    }
+  });
+
+  // Add click listener to the container to handle clicks on panels themselves
+  announcementContainer.addEventListener('click', (e) => {
+    const clickedPanel = e.target.closest('.announcement-panel');
+    if (clickedPanel) {
+      const clickedIndex = parseInt(clickedPanel.dataset.index);
+      
+      // Останавливаем автопрокрутку при клике
+      if (autoPlayTimeout) clearTimeout(autoPlayTimeout);
+      isAutoPlaying = false;
+
+      // Устанавливаем текущий индекс
+      currentIndex = clickedIndex;
+      updatePanels();
+
+      // Запускаем таймер на 10 секунд
+      setTimeout(() => {
+        // Возвращаем автопрокрутку
+        isAutoPlaying = true;
+        startAutoPlay();
+      }, 10000);
+    }
+  });
+
+  // Initial fetch and render
+  fetchAnnouncements();
+  // Remove old static initialization of showEachAnnouncement as we handle it dynamically
+});
+
+</script>
+    <script src="common.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginButton = document.getElementById('login-button');
+      const userProfile = document.getElementById('user-profile');
+      const userName = document.getElementById('user-name');
+      const userAvatar = document.getElementById('user-avatar');
+      const userStatus = document.getElementById('user-status');
+      const logoutButton = document.getElementById('logout-button');
+
+      const statuses = [
+        "Бравый гном", "Трусливый маг", "Загадочный эльф", "Могучий орк",
+        "Хитрый гоблин", "Спящий дракон", "Начинающий герой", "Король тыкв",
+        "Потерянный во времени", "Мастер над монетой"
+      ];
+
+      // Функция для получения случайного статуса
+      const getRandomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
+
+      // Функция для обновления UI
+      const updateUI = (user) => {
+        if (user) {
+          loginButton.style.display = 'none';
+          userProfile.style.display = 'flex';
+          userName.textContent = user.username;
+          userAvatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
+          
+          // Проверяем, есть ли сохраненный статус, иначе генерируем новый
+          let savedStatus = localStorage.getItem(`user-status-${user.id}`);
+          if (!savedStatus) {
+            savedStatus = getRandomStatus();
+            localStorage.setItem(`user-status-${user.id}`, savedStatus);
+          }
+          userStatus.textContent = savedStatus;
+
+        } else {
+          loginButton.style.display = 'flex';
+          userProfile.style.display = 'none';
+        }
+      };
+
+      loginButton.addEventListener('click', () => {
+        const width = 600, height = 750;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+        const authUrl = '/auth/discord';
+        const authWindow = window.open(authUrl, 'discordAuth', `width=${width},height=${height},top=${top},left=${left}`);
+        if (window.focus) {
+            authWindow.focus();
+        }
+      });
+      
+      window.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'authSuccess') {
+            updateUI(event.data.user);
+        }
+      });
+
+      fetch('/auth/session')
+        .then(res => res.json())
+        .then(data => {
+          if (data.authenticated && data.user) {
+            updateUI(data.user);
+          } else {
+            updateUI(null);
+          }
+        })
+        .catch(() => updateUI(null));
+
+      logoutButton.addEventListener('click', () => {
+        fetch('/auth/logout', { method: 'POST' })
+          .then(() => {
+             const profileAvatarSrc = userAvatar.src;
+             const idFromAvatar = profileAvatarSrc.split('/')[4];
+             if(idFromAvatar) {
+                localStorage.removeItem(`user-status-${idFromAvatar}`);
+             }
+            window.location.href = '/';
+          });
+      });
+    });
+  </script>
+
+</body>
+</html>
