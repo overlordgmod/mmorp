@@ -174,8 +174,9 @@ wss.on('connection', async (ws, req) => {
                 if (!user) {
                     ws.send(JSON.stringify({
                         type: 'error',
-                        message: 'Пожалуйста, авторизуйтесь, чтобы отправлять сообщения.'
+                        message: 'Пожалуйста, авторизуйтесь, чтобы отправлять сообщения. Соединение будет закрыто.'
                     }));
+                    ws.close(4001, 'Unauthorized');
                     return;
                 }
 
