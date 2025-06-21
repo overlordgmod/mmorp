@@ -207,6 +207,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Auth Logic ---
     
+    // DOM-элементы для авторизации в шапке
+    const loginButton = document.getElementById('login-button');
+    const userProfile = document.getElementById('user-profile');
+    const userName = document.getElementById('user-name');
+    const userAvatar = document.getElementById('user-avatar');
+    const userStatus = document.getElementById('user-status');
+    const logoutButton = document.getElementById('logout-button');
+    const statuses = [
+        "Бравый гном", "Трусливый маг", "Загадочный эльф", "Могучий орк",
+        "Хитрый гоблин", "Спящий дракон", "Начинающий герой", "Король нубов",
+        "Потерянный во времени", "Мастер меча"
+    ];
+    const getRandomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
+
+    // DOM-элементы для авторизации в чате
+    const chatAuthMessage = dialog.querySelector(".auth-message");
+    const chatLoginBtn = chatAuthMessage ? chatAuthMessage.querySelector('.discord-login-btn') : null;
+
     // Функция для проверки сессии
     async function checkSession() {
         try {
@@ -218,67 +236,116 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Инициализация кнопки входа через Discord
-    function initDiscordLogin() {
-        const loginBtn = document.querySelector('.discord-login-btn');
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
-                const width = 600, height = 750;
-                const left = (window.screen.width / 2) - (width / 2);
-                const top = (window.screen.height / 2) - (height / 2);
-                const authUrl = '/auth/discord';
-                const authWindow = window.open(authUrl, 'discordAuth', `width=${width},height=${height},top=${top},left=${left}`);
-                if (window.focus) {
-                    authWindow.focus();
-                }
-            });
-        }
-    }
-
-    function initLogout() {
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', async () => {
-                try {
-                    await fetch('/auth/logout', { method: 'POST' });
-                    updateUIForUnauthenticated();
-                    // Также отключаем чат при выходе
-                    closeWebSocket();
-                } catch (error) {
-                    console.error('Ошибка при выходе:', error);
-                }
-            });
-        }
-    }
-
     function updateUIForAuthenticated(user) {
-        const authContainer = document.getElementById('auth-container');
-        const userInfo = document.getElementById('user-info');
+        // Обновляем UI в шапке
+        if (loginButton) loginButton.style.display = 'none';
+        if (userProfile) userProfile.style.display = 'flex';
+        if (userName) userName.textContent = user.username;
+        if (userAvatar) userAvatar.src = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png`;
         
-        if (authContainer) authContainer.style.display = 'none';
-        if (userInfo) {
-            userInfo.style.display = 'flex';
-            const avatar = document.getElementById('user-avatar');
-            const username = document.getElementById('user-name');
-            const discriminator = document.getElementById('user-discriminator');
-            if(avatar) avatar.src = user.avatar;
-            if(username) username.textContent = user.username;
-            if(discriminator) discriminator.textContent = `#${user.discriminator}`;
+        let savedStatus = localStorage.getItem(`user-status-${user.id}`);
+        if (!savedStatus) {
+            savedStatus = getRandomStatus();
+            localStorage.setItem(`user-status-${user.id}`, savedStatus);
         }
+        if (userStatus) userStatus.textContent = savedStatus;
+
+        // Обновляем UI в чате
+        if (chatInput) chatInput.disabled = false;
+        if (sendButton) sendButton.disabled = false;
+        if (chatAuthMessage) chatAuthMessage.style.display = 'none';
     }
 
     function updateUIForUnauthenticated() {
-        const authContainer = document.getElementById('auth-container');
-        const userInfo = document.getElementById('user-info');
-        
-        if (authContainer) authContainer.style.display = 'block';
-        if (userInfo) userInfo.style.display = 'none';
+        // Обновляем UI в шапке
+        if (loginButton) loginButton.style.display = 'flex';
+        if (userProfile) userProfile.style.display = 'none';
+
+        // Обновляем UI в чате
+        if (chatInput) {
+            chatInput.disabled = true;
+            chatInput.placeholder = 'Войдите, чтобы писать';
+        }
+        if (sendButton) sendButton.disabled = true;
+        if (chatAuthMessage) chatAuthMessage.style.display = 'block';
     }
 
-    // Инициализация логики авторизации
-    initDiscordLogin();
-    initLogout();
+    // Общая функция для входа
+    const startLogin = () => {
+        const width = 600, height = 750;
+        const left = (window.screen.width / 2) - (width / 2);
+        const top = (window.screen.height / 2) - (height / 2);
+        const authUrl = '/auth/discord';
+        window.open(authUrl, 'discordAuth', `width=${width},height=${height},top=${top},left=${left}`);
+    };
     
+    // Инициализация логики авторизации
+    if (loginButton) loginButton.addEventListener('click', startLogin);
+    if (chatLoginBtn) chatLoginBtn.addEventListener('click', startLogin);
+
+    if (logoutButton) {
+        logoutButton.addEventListener('click', async () => {
+            const profileAvatarSrc = userAvatar.src;
+            const idFromAvatar = profileAvatarSrc.split('/')[4];
+            if (idFromAvatar) {
+                localStorage.removeItem(`user-status-${idFromAvatar}`);
+            }
+            await fetch('/auth/logout', { method: 'POST' });
+            updateUIForUnauthenticated();
+            closeWebSocket(); // Отключаем чат
+        });
+    }
+
+    // --- Логика помощника "Швепсик" ---
+    const phrases = [
+        "Нажми на слайды — это переходы по разделам.",
+        "Господин Эклер меня убьёт, я должен идти убираться.",
+        "Не забудь зайти на наш Discord сервер, там вы сможете найти новых друзей!",
+        "Поддержать проект можно нажав на панель с донатом.",
+        "Если есть вопросы или заметил неисправность, напиши мне в чате!"
+    ];
+    let phraseIndex = 0;
+
+    // Показываем Швепсика через 2 сек
+    if (container && !localStorage.getItem("hideShvepsik")) {
+        setTimeout(() => {
+            container.style.display = "flex";
+        }, 2000);
+    }
+
+    // Клик по Швепсику
+    if (img) {
+        img.addEventListener("click", () => {
+            if (dialog.style.display === "none") {
+                dialog.style.display = "block";
+            }
+        });
+    }
+
+    // Кнопки диалога
+    if (closeBtn) {
+        closeBtn.addEventListener("click", () => {
+             dialog.style.display = "none";
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener("click", () => {
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            if(textBox) textBox.textContent = phrases[phraseIndex];
+        });
+    }
+
+    // Автосмена фраз
+    setInterval(() => {
+        if (dialog && dialog.style.display !== "none" && chatContainer.style.display === "none") {
+            phraseIndex = (phraseIndex + 1) % phrases.length;
+            if(textBox) textBox.textContent = phrases[phraseIndex];
+        }
+    }, 7000);
+
+
+    // --- Финальная инициализация ---
     checkSession().then(data => {
         if (data.authenticated) {
             updateUIForAuthenticated(data.user);
