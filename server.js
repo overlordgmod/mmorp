@@ -129,8 +129,36 @@ function requireAuth(req, res, next) {
 }
 
 // Обработка WebSocket подключений
-wss.on('connection', (ws) => {
-    console.log('[server.js] Client connected via WebSocket');
+wss.on('connection', async (ws, req) => {
+    const cookies = parseCookies(req.headers.cookie);
+    const sessionId = cookies.sessionId;
+    let user = null;
+
+    if (sessionId) {
+        try {
+            const sessionSnapshot = await sessionsRef.child(sessionId).once('value');
+            const session = sessionSnapshot.val();
+
+            if (session && session.expiresAt && Date.now() < session.expiresAt) {
+                user = {
+                    id: session.userId,
+                    username: session.username,
+                };
+                console.log(`[server.js] User ${user.username} (${user.id}) connected via WebSocket.`);
+            } else if (session) {
+                // Session expired
+                await sessionsRef.child(sessionId).remove();
+                console.log(`[server.js] Removed expired session ${sessionId}`);
+            }
+        } catch (error) {
+            console.error('[server.js] Error validating session:', error);
+        }
+    }
+
+    if (!user) {
+        console.log('[server.js] Anonymous client connected via WebSocket');
+    }
+    
     let clientId = null;
 
     ws.on('message', (message) => {
@@ -143,6 +171,14 @@ wss.on('connection', (ws) => {
                 console.log('[server.js] Client initialized with ID:', clientId);
                 clients.set(clientId, ws);
             } else if (data.type === 'message' || data.type === 'chatMessage') {
+                if (!user) {
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: 'Пожалуйста, авторизуйтесь, чтобы отправлять сообщения.'
+                    }));
+                    return;
+                }
+
                 if (!clientId) {
                     console.log('[server.js] Message received before initialization');
                     return;
@@ -170,14 +206,14 @@ wss.on('connection', (ws) => {
                         name: `support-${clientId}`,
                         type: ChannelType.GuildText,
                         parent: category.id,
-                        topic: `Support chat for client ${clientId}`
+                        topic: `Support chat for client ${user.username} (${user.id})`
                     }).then(channel => {
                         discordChannelId = channel.id;
                         clientToDiscordChannel.set(clientId, discordChannelId);
                         discordChannelToClient.set(discordChannelId, clientId);
 
                         // Отправляем сообщение в новый канал
-                        channel.send(`**User ${clientId}**: ${data.message}`);
+                        channel.send(`**User ${user.username} (${user.id})**: ${data.message}`);
                         
                         // Отправляем подтверждение клиенту
                         ws.send(JSON.stringify({
@@ -201,7 +237,7 @@ wss.on('connection', (ws) => {
                     // Отправляем сообщение в существующий канал
                     const channel = client.channels.cache.get(discordChannelId);
                     if (channel) {
-                        channel.send(`**User ${clientId}**: ${data.message}`);
+                        channel.send(`**User ${user.username} (${user.id})**: ${data.message}`);
                         
                         // Отправляем только подтверждение отправки сообщения
                         ws.send(JSON.stringify({
@@ -221,7 +257,9 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
-        console.log('[server.js] Client disconnected');
+        if (user) {
+            console.log(`[server.js] User ${user.username} (${user.id}) disconnected.`);
+        }
         if (clientId) {
             clients.delete(clientId);
             const discordChannelId = clientToDiscordChannel.get(clientId);
