@@ -1,0 +1,15 @@
+{
+    "token": "MTM4MzI0ODM3MjIxODk5MDYxMw.GWssBg.Ljr0KMe2ChOeUh7TDLKTwle0MSpszrCRR_30zQ",
+    "supportChannelId": "1383249368303276042",
+    "guildId": "1383249283054305453",
+    "supportCategoryId": "1383255206250283039",
+    "announcementCategoryId": "1383260146993467472",
+    "announcementChannelId": "1383260199258951761",
+    "deleteAnnouncementChannelId": "1383864783572303933",
+    "discord": {
+        "clientId": "1383248372218990613",
+        "clientSecret": "dh2969qZADcJj5FX1c0U9yDsVBzaDPYx",
+        "redirectUri": "https://overlord-mmorp.onrender.com/auth/discord/callback",
+        "scopes": ["identify", "guilds"]
+    }
+} 
