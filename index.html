@@ -44,44 +44,44 @@
       right: 0;
       top: 50%;
       transform: translateY(-50%);
-      height: 100vh;
+      height: 90vh;
       width: auto;
       z-index: 2;
       object-fit: contain;
     }
 
     .preloader-panel {
-      background: linear-gradient(135deg, rgba(88, 28, 135, 0.9), rgba(59, 130, 246, 0.9));
+      background: rgba(28, 28, 46, 0.8);
       backdrop-filter: blur(15px);
-      border: 2px solid rgba(184, 145, 249, 0.5);
-      border-radius: 20px;
-      padding: 40px 60px;
+      border: 1px solid rgba(184, 145, 249, 0.4);
+      border-radius: 15px;
+      padding: 20px 30px;
       text-align: center;
-      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       z-index: 3;
       position: relative;
-      transform: translateX(-300px) translateY(-100px);
+      transform: translateX(-170px) translateY(-80px);
     }
 
     .preloader-title {
       font-family: 'Cinzel Decorative', serif;
-      font-size: 2.5em;
+      font-size: 2em;
       color: #fff;
-      margin-bottom: 30px;
-      text-shadow: 0 0 20px rgba(184, 145, 249, 0.8);
+      margin-bottom: 20px;
+      text-shadow: 0 0 15px rgba(184, 145, 249, 0.8);
     }
 
     .preloader-subtitle {
-      font-size: 1.2em;
+      font-size: 1em;
       color: rgba(255, 255, 255, 0.8);
-      margin-bottom: 40px;
+      margin-bottom: 25px;
     }
 
     .progress-container {
-      width: 400px;
-      height: 20px;
+      width: 300px;
+      height: 15px;
       background: rgba(0, 0, 0, 0.3);
-      border-radius: 10px;
+      border-radius: 8px;
       overflow: hidden;
       margin: 0 auto 20px;
       border: 1px solid rgba(184, 145, 249, 0.3);
@@ -90,7 +90,7 @@
     .progress-bar {
       height: 100%;
       background: linear-gradient(90deg, #b891f9, #3b82f6, #8b5cf6);
-      border-radius: 10px;
+      border-radius: 8px;
       width: 0%;
       transition: width 0.3s ease;
       position: relative;
@@ -2732,6 +2732,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 </script>
     <script src="common.js"></script>
+    <script src="r.js"></script>
+    <script src="audio-player.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        if (!isMobileDevice()) {
+          new AudioPlayer('https://overlord-mmorp.onrender.com/phonmusic.mp3');
+        }
+      });
+    </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -2850,22 +2859,10 @@ document.addEventListener('DOMContentLoaded', function() {
       welcomeAudio = new Audio('welcome.wav');
       welcomeAudio.volume = 0.30; // Громкость 30%
       
-      // Проверяем время загрузки
-      const loadTime = performance.now() - loadStartTime;
-      const isFastLoad = loadTime < 500; // Если загрузка меньше 500мс, считаем быстрой
-      
-      // Если загрузка была быстрой (из кеша), скрываем прелоадер сразу
-      if (isFastLoad) {
-        preloader.style.display = 'none';
-        // Добавляем обработчик клика для воспроизведения аудио
-        document.addEventListener('click', handleFirstClick);
-        return;
-      }
-      
       let progress = 0;
       const targetProgress = 100;
-      const duration = 5000; // 5 секунд на загрузку
-      const interval = 50; // Обновление каждые 50мс
+      const duration = 3000; // 3 секунды на загрузку
+      const interval = 30; // Обновление каждые 30мс
       const increment = (targetProgress / (duration / interval));
       
       const loadingInterval = setInterval(() => {
