@@ -145,6 +145,34 @@ wss.on('connection', async (ws, req) => {
                     username: session.username,
                 };
                 console.log(`[server.js] User ${user.username} (${user.id}) connected via WebSocket.`);
+                
+                // Проверяем, не заблокирован ли пользователь
+                const blockStatus = await checkUserBlocked(user.id);
+                if (blockStatus.blocked) {
+                    const timeLeft = blockStatus.until - Date.now();
+                    const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                    const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    let timeMessage = '';
+                    if (blockStatus.permanent) {
+                        timeMessage = 'Вы заблокированы навсегда.';
+                    } else if (hoursLeft > 0) {
+                        timeMessage = `Вы заблокированы еще ${hoursLeft}ч ${minutesLeft}м.`;
+                    } else {
+                        timeMessage = `Вы заблокированы еще ${minutesLeft}м.`;
+                    }
+
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: `Вы заблокированы: ${blockStatus.reason}. ${timeMessage}`
+                    }));
+                    
+                    // Закрываем соединение для заблокированного пользователя
+                    setTimeout(() => {
+                        ws.close(4002, 'User blocked');
+                    }, 3000);
+                    return;
+                }
             } else if (session) {
                 // Session expired
                 await sessionsRef.child(sessionId).remove();
@@ -177,6 +205,30 @@ wss.on('connection', async (ws, req) => {
                         message: 'Пожалуйста, авторизуйтесь, чтобы отправлять сообщения. Соединение будет закрыто.'
                     }));
                     ws.close(4001, 'Unauthorized');
+                    return;
+                }
+
+                // Проверяем, не заблокирован ли пользователь
+                const blockStatus = await checkUserBlocked(user.id);
+                if (blockStatus.blocked) {
+                    const untilDate = new Date(blockStatus.until);
+                    const timeLeft = blockStatus.until - Date.now();
+                    const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+                    const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    let timeMessage = '';
+                    if (blockStatus.permanent) {
+                        timeMessage = 'Вы заблокированы навсегда.';
+                    } else if (hoursLeft > 0) {
+                        timeMessage = `Вы заблокированы еще ${hoursLeft}ч ${minutesLeft}м.`;
+                    } else {
+                        timeMessage = `Вы заблокированы еще ${minutesLeft}м.`;
+                    }
+
+                    ws.send(JSON.stringify({
+                        type: 'error',
+                        message: `Вы заблокированы: ${blockStatus.reason}. ${timeMessage}`
+                    }));
                     return;
                 }
 
@@ -370,20 +422,25 @@ async function checkUserBlocked(userId) {
         const blockedData = snapshot.val();
         
         if (!blockedData) {
-            return false;
+            return { blocked: false };
         }
 
         // Проверяем, не истек ли срок блокировки
-        if (blockedData.expiresAt && blockedData.expiresAt < Date.now()) {
+        if (blockedData.until && blockedData.until < Date.now()) {
             // Если срок блокировки истек, удаляем запись
             await blockedUsersRef.child(userId).remove();
-            return false;
+            return { blocked: false };
         }
 
-        return true;
+        return { 
+            blocked: true, 
+            until: blockedData.until,
+            reason: blockedData.reason,
+            permanent: blockedData.permanent || false
+        };
     } catch (error) {
         console.error('[server.js] Error checking user block status:', error);
-        return false; // В случае ошибки считаем, что пользователь не заблокирован
+        return { blocked: false }; // В случае ошибки считаем, что пользователь не заблокирован
     }
 }
 
