@@ -54,7 +54,7 @@ class AudioPlayer {
                 left: 20px;
                 bottom: 20px;
                 background: rgba(0, 0, 0, 0.8);
-                padding: 15px;
+                padding: 10px;
                 border-radius: 10px;
                 z-index: 1000;
                 color: white;
@@ -62,12 +62,15 @@ class AudioPlayer {
                 box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
                 display: flex;
                 align-items: center;
+                max-width: 300px;
+                width: 100%;
             }
 
             .player-controls {
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 8px;
+                width: 100%;
             }
 
             .play-pause, .rewind {
@@ -75,14 +78,15 @@ class AudioPlayer {
                 border: none;
                 color: white;
                 cursor: pointer;
-                font-size: 20px;
-                width: 40px;
-                height: 40px;
+                font-size: 16px;
+                width: 30px;
+                height: 30px;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 transition: background-color 0.3s;
+                flex-shrink: 0;
             }
 
             .play-pause:hover, .rewind:hover {
@@ -90,16 +94,19 @@ class AudioPlayer {
             }
 
             .progress-container {
-                flex: 1;
-                min-width: 200px;
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                margin: 0 5px;
             }
 
             .progress-bar {
                 background: rgba(255, 255, 255, 0.2);
-                height: 5px;
+                height: 8px;
                 border-radius: 3px;
                 cursor: pointer;
                 position: relative;
+                width: 100%;
             }
 
             .progress {
@@ -111,9 +118,10 @@ class AudioPlayer {
             }
 
             .time {
-                font-size: 12px;
-                margin-top: 5px;
+                font-size: 10px;
+                margin-top: 3px;
                 color: rgba(255, 255, 255, 0.7);
+                text-align: center;
             }
 
             .volume-control {
@@ -123,7 +131,7 @@ class AudioPlayer {
             }
 
             .volume-control input {
-                width: 80px;
+                width: 60px;
                 cursor: pointer;
             }
 
