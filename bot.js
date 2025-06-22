@@ -28,8 +28,16 @@ client.on('messageCreate', async message => {
         return;
     }
 
+    // Команды модерации работают только в определенном канале
+    const moderationChannelId = '1386193188984983654';
+    const isModerationChannel = message.channel.id === moderationChannelId;
+
     // Команда /mute
     if (message.content.startsWith('/mute')) {
+        if (!isModerationChannel) {
+            return message.reply('Команды модерации работают только в канале модерации.');
+        }
+
         const args = message.content.split(' ');
         if (args.length < 3) {
             return message.reply('Использование: `/mute <время в минутах> <discord id>`');
@@ -95,6 +103,10 @@ client.on('messageCreate', async message => {
 
     // Команда /unmute
     if (message.content.startsWith('/unmute')) {
+        if (!isModerationChannel) {
+            return message.reply('Команды модерации работают только в канале модерации.');
+        }
+
         const args = message.content.split(' ');
         if (args.length < 2) {
             return message.reply('Использование: `/unmute <discord id>`');
@@ -137,6 +149,10 @@ client.on('messageCreate', async message => {
 
     // Команда /ban
     if (message.content.startsWith('/ban')) {
+        if (!isModerationChannel) {
+            return message.reply('Команды модерации работают только в канале модерации.');
+        }
+
         const args = message.content.split(' ');
         if (args.length < 2) {
             return message.reply('Использование: `/ban <discord id>`');
@@ -192,6 +208,10 @@ client.on('messageCreate', async message => {
 
     // Команда /unban
     if (message.content.startsWith('/unban')) {
+        if (!isModerationChannel) {
+            return message.reply('Команды модерации работают только в канале модерации.');
+        }
+
         const args = message.content.split(' ');
         if (args.length < 2) {
             return message.reply('Использование: `/unban <discord id>`');
@@ -234,6 +254,10 @@ client.on('messageCreate', async message => {
 
     // Команда /blockstatus
     if (message.content.startsWith('/blockstatus')) {
+        if (!isModerationChannel) {
+            return message.reply('Команды модерации работают только в канале модерации.');
+        }
+
         const args = message.content.split(' ');
         if (args.length < 2) {
             return message.reply('Использование: `/blockstatus <discord id>`');
