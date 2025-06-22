@@ -8,6 +8,134 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    /* Preloader Styles */
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+
+    #preloader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    .preloader-content {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .preloader-image {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 100vh;
+      width: auto;
+      z-index: 2;
+      object-fit: contain;
+    }
+
+    .preloader-panel {
+      background: linear-gradient(135deg, rgba(88, 28, 135, 0.9), rgba(59, 130, 246, 0.9));
+      backdrop-filter: blur(15px);
+      border: 2px solid rgba(184, 145, 249, 0.5);
+      border-radius: 20px;
+      padding: 40px 60px;
+      text-align: center;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      z-index: 3;
+      position: relative;
+      transform: translateX(-300px) translateY(-100px);
+    }
+
+    .preloader-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: 2.5em;
+      color: #fff;
+      margin-bottom: 30px;
+      text-shadow: 0 0 20px rgba(184, 145, 249, 0.8);
+    }
+
+    .preloader-subtitle {
+      font-size: 1.2em;
+      color: rgba(255, 255, 255, 0.8);
+      margin-bottom: 40px;
+    }
+
+    .progress-container {
+      width: 400px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      overflow: hidden;
+      margin: 0 auto 20px;
+      border: 1px solid rgba(184, 145, 249, 0.3);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #b891f9, #3b82f6, #8b5cf6);
+      border-radius: 10px;
+      width: 0%;
+      transition: width 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { left: -100%; }
+      100% { left: 100%; }
+    }
+
+    .progress-text {
+      font-size: 1.1em;
+      color: #fff;
+      font-weight: bold;
+    }
+
+    .loading-dots {
+      display: inline-block;
+      animation: dots 1.5s infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s infinite;
+    }
+
     body {
       font-family: 'Roboto', sans-serif;
       background-color: #0d0d16;
@@ -1926,6 +2054,21 @@
 
 </head>
 <body>
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="preloader-content">
+      <img src="ainzahuel.png" alt="Ainz" class="preloader-image">
+      <div class="preloader-panel">
+        <h1 class="preloader-title">Battle For Yggdrasil</h1>
+        <p class="preloader-subtitle">Загрузка мира<span class="loading-dots"></span></p>
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div class="progress-text" id="progress-text">0%</div>
+      </div>
+    </div>
+  </div>
+
   <div id="user-container">
     <a id="login-button" class="discord-button" style="cursor: pointer;">
       <img src="discord_logotipo.png" alt="Discord" class="discord-logo">
@@ -2669,6 +2812,87 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = '/';
           });
       });
+    });
+  </script>
+
+  <!-- Preloader Script -->
+  <script>
+    // Засекаем время начала загрузки
+    const loadStartTime = performance.now();
+    
+    // Глобальная переменная для аудио
+    let welcomeAudio = null;
+    let audioPlayed = false;
+    
+    // Функция для воспроизведения аудио
+    function playWelcomeAudio() {
+      if (!audioPlayed && welcomeAudio) {
+        welcomeAudio.play().then(() => {
+          audioPlayed = true;
+        }).catch(e => {
+          console.log('Ошибка воспроизведения аудио:', e);
+        });
+      }
+    }
+    
+    // Обработчик клика для воспроизведения аудио
+    function handleFirstClick() {
+      playWelcomeAudio();
+      document.removeEventListener('click', handleFirstClick);
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const preloader = document.getElementById('preloader');
+      const progressBar = document.getElementById('progress-bar');
+      const progressText = document.getElementById('progress-text');
+      
+      // Создаем аудио элемент для welcome.wav
+      welcomeAudio = new Audio('welcome.wav');
+      welcomeAudio.volume = 0.30; // Громкость 30%
+      
+      // Проверяем время загрузки
+      const loadTime = performance.now() - loadStartTime;
+      const isFastLoad = loadTime < 500; // Если загрузка меньше 500мс, считаем быстрой
+      
+      // Если загрузка была быстрой (из кеша), скрываем прелоадер сразу
+      if (isFastLoad) {
+        preloader.style.display = 'none';
+        // Добавляем обработчик клика для воспроизведения аудио
+        document.addEventListener('click', handleFirstClick);
+        return;
+      }
+      
+      let progress = 0;
+      const targetProgress = 100;
+      const duration = 3000; // 3 секунды на загрузку
+      const interval = 50; // Обновление каждые 50мс
+      const increment = (targetProgress / (duration / interval));
+      
+      const loadingInterval = setInterval(() => {
+        progress += increment;
+        
+        if (progress >= targetProgress) {
+          progress = targetProgress;
+          clearInterval(loadingInterval);
+          
+          // Обновляем прогресс бар
+          progressBar.style.width = progress + '%';
+          progressText.textContent = Math.round(progress) + '%';
+          
+          // Скрываем прелоадер
+          setTimeout(() => {
+            preloader.classList.add('hidden');
+            
+            // Добавляем обработчик клика для воспроизведения аудио
+            document.addEventListener('click', handleFirstClick);
+            
+          }, 500);
+        } else {
+          // Обновляем прогресс бар
+          progressBar.style.width = progress + '%';
+          progressText.textContent = Math.round(progress) + '%';
+        }
+      }, interval);
     });
   </script>
 
