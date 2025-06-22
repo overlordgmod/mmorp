@@ -102,8 +102,8 @@ class AudioPlayer {
 
             .progress-bar {
                 background: rgba(255, 255, 255, 0.2);
-                height: 8px;
-                border-radius: 3px;
+                height: 24px;
+                border-radius: 12px;
                 cursor: pointer;
                 position: relative;
                 width: 100%;
@@ -112,14 +112,14 @@ class AudioPlayer {
             .progress {
                 background: #1DB954;
                 height: 100%;
-                border-radius: 3px;
+                border-radius: 12px;
                 width: 0%;
                 transition: width 0.1s linear;
             }
 
             .time {
                 font-size: 10px;
-                margin-top: 3px;
+                margin-top: 8px;
                 color: rgba(255, 255, 255, 0.7);
                 text-align: center;
             }
