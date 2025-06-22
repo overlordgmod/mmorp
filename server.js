@@ -922,12 +922,12 @@ client.on('messageCreate', async message => {
             }
         }
 
-        // Команда /ban
-        if (message.content.startsWith('/ban')) {
-            console.log(`[DEBUG] Обнаружена команда /ban`);
+        // Команда /banan
+        if (message.content.startsWith('/banan')) {
+            console.log(`[DEBUG] Обнаружена команда /banan`);
             const args = message.content.split(' ');
             if (args.length < 2) {
-                return message.reply('Использование: `/ban <discord id>`');
+                return message.reply('Использование: `/banan <discord id>`');
             }
 
             const targetUserId = args[1];
