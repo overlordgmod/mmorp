@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор Устава - MMORPG Overlord</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../particles.css">
+    <script src="../../particles.js" defer></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #0d0b14, #1a1625);
+            color: #e0dcf7;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .main-title {
+            margin-bottom: 60px;
+        }
+
+        .main-title h1 {
+            font-size: 3.5em;
+            color: #f5b94f;
+            margin-bottom: 20px;
+            text-shadow: 0 4px 15px rgba(245, 185, 79, 0.3);
+            background: linear-gradient(135deg, #f5b94f, #e67e22);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            font-size: 1.3em;
+            color: #b19cd9;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            font-size: 1.1em;
+            color: #8a7ca8;
+            max-width: 600px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        .charters-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .charter-card {
+            background: rgba(28, 24, 41, 0.8);
+            border: 2px solid #2a253b;
+            border-radius: 20px;
+            padding: 35px;
+            transition: all 0.4s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .charter-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(245, 185, 79, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .charter-card:hover::before {
+            left: 100%;
+        }
+
+        .charter-card:hover {
+            transform: translateY(-10px);
+            border-color: #f5b94f;
+            box-shadow: 0 15px 40px rgba(245, 185, 79, 0.2);
+        }
+
+        .charter-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .charter-title {
+            font-size: 2.2em;
+            color: #f5b94f;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .charter-subtitle {
+            font-size: 1.2em;
+            color: #b19cd9;
+            margin-bottom: 20px;
+        }
+
+        .charter-description {
+            color: #e0dcf7;
+            line-height: 1.6;
+            margin-bottom: 30px;
+        }
+
+        .charter-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 30px;
+        }
+
+        .charter-features li {
+            padding: 8px 0;
+            color: #b19cd9;
+            position: relative;
+            padding-left: 25px;
+        }
+
+        .charter-features li::before {
+            content: "⚜️";
+            position: absolute;
+            left: 0;
+            color: #f5b94f;
+        }
+
+        .charter-btn {
+            background: linear-gradient(135deg, #f5b94f, #e67e22);
+            color: #0d0b14;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 4px 15px rgba(245, 185, 79, 0.3);
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .charter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 185, 79, 0.4);
+        }
+
+        .charter-btn:active {
+            transform: translateY(0);
+        }
+
+
+        .kingdom-card {
+            border-left: 4px solid #27ae60;
+        }
+
+        .kingdom-card .charter-icon {
+            color: #27ae60;
+        }
+
+        .kingdom-card:hover {
+            border-color: #27ae60;
+            box-shadow: 0 15px 40px rgba(39, 174, 96, 0.2);
+        }
+
+
+        .empire-card {
+            border-left: 4px solid #e74c3c;
+        }
+
+        .empire-card .charter-icon {
+            color: #e74c3c;
+        }
+
+        .empire-card:hover {
+            border-color: #e74c3c;
+            box-shadow: 0 15px 40px rgba(231, 76, 60, 0.2);
+        }
+
+        .empire-card .charter-btn {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+
+        .nonrp-card {
+            border-left: 4px solid #9b59b6;
+        }
+
+        .nonrp-card .charter-icon {
+            color: #9b59b6;
+        }
+
+        .nonrp-card:hover {
+            border-color: #9b59b6;
+            box-shadow: 0 15px 40px rgba(155, 89, 182, 0.2);
+        }
+
+        .nonrp-card .charter-btn {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+            color: white;
+        }
+
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .charter-card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        .charter-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .charter-card:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+
+        @media (max-width: 768px) {
+            .main-title h1 {
+                font-size: 2.5em;
+            }
+            
+            .charters-container {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            
+            .charter-card {
+                padding: 30px 20px;
+            }
+            
+            .charter-title {
+                font-size: 1.8em;
+            }
+        }
+
+
+        /* Navigation Styles */
+        .nav {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 20;
+        }
+
+        .nav a {
+            color: #fff;
+            text-decoration: none;
+            background: rgba(40, 40, 60, 0.4);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 1px solid rgba(184, 145, 249, 0.3);
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 20px rgba(184,145,249,0.1);
+            font-size: 14px;
+            white-space: nowrap;
+            width: auto;
+            max-width: 200px;
+        }
+
+        .nav a:hover {
+            background: rgba(184,145,249,0.2);
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(184,145,249,0.2);
+        }
+
+        .nav a.active {
+            background: rgba(184,145,249,0.3);
+            border-color: rgba(184,145,249,0.6);
+        }
+
+        /* Responsive Navigation */
+        @media (max-width: 768px) {
+            .nav { 
+                flex-direction: column; 
+            }
+        }
+
+        /* Fade In Animation */
+        .fade-in {
+            animation: fadeIn 0.8s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div class="nav fade-in">
+        <a href="../../index.html">Главная</a>
+        <a href="../../rules.html">Общие правила</a>
+        <a href="../../fractions.html">Правила фракций</a>
+        <a href="../../chatrules.html">Правила общения</a>
+        <a href="../../Guilds.html">Правила гильдий</a>
+        <a href="../../Lor.html">Лор</a>
+        <a href="main.html" class="active">Устав</a>
+    </div>
+
+    <div class="container">
+        <div class="main-title">
+            <h1>🏰 Выбор Устава</h1>
+            <div class="subtitle">MMORPG-сервер по мотивам аниме "Overlord"</div>
+            <div class="description">
+                Добро пожаловать в мир магии и меча! Выберите устав государства, законы которого будут определять ваше приключение.
+            </div>
+        </div>
+
+        <div class="charters-container">
+            <div class="charter-card kingdom-card" onclick="location.href='kingdom-re-esti.html'">
+                <span class="charter-icon">👑</span>
+                <h2 class="charter-title">Королевство Ре-Эсти</h2>
+                <div class="charter-subtitle">Монархическое государство</div>
+                <div class="charter-description">
+                    Традиционное королевство с четкой иерархией власти, где король обладает абсолютной властью, но ограничен законами и правами граждан.
+                </div>
+                <ul class="charter-features">
+                    <li>Монархическая система правления</li>
+                    <li>Детальная иерархия от короля до барона</li>
+                    <li>Система рыцарства и дворянства</li>
+                    <li>Магическая гильдия при дворе</li>
+                    <li>Защита прав простых граждан</li>
+                    <li>Международные отношения</li>
+                </ul>
+                <a href="kingdom-re-esti.html" class="charter-btn">Изучить Устав Королевства</a>
+            </div>
+
+            <div class="charter-card empire-card" onclick="location.href='empire-baharut.html'">
+                <span class="charter-icon">👑</span>
+                <h2 class="charter-title">Империя Бахарут</h2>
+                <div class="charter-subtitle">Имперская система власти</div>
+                <div class="charter-description">
+                    Могущественная империя с централизованной властью императора, развитой бюрократией и строгой военной дисциплиной.
+                </div>
+                <ul class="charter-features">
+                    <li>Императорская власть с абсолютными полномочиями</li>
+                    <li>Развитая система министерств</li>
+                    <li>Военная иерархия и дисциплина</li>
+                    <li>Имперская магическая академия</li>
+                    <li>Строгие законы и порядок</li>
+                    <li>Экспансионистская политика</li>
+                </ul>
+                <a href="empire-baharut.html" class="charter-btn">Изучить Устав Империи</a>
+            </div>
+
+            <div class="charter-card nonrp-card" onclick="location.href='non-rp-rules.html'">
+                <span class="charter-icon">📋</span>
+                <h2 class="charter-title">Правила Non-RP</h2>
+                <div class="charter-subtitle">Общие правила ролевой игры</div>
+                <div class="charter-description">
+                    Единые правила для всех игроков о том, что можно и нельзя делать в ролевой игре. Ограничения для знати и простолюдинов.
+                </div>
+                <ul class="charter-features">
+                    <li>Запреты для всех титулов знати</li>
+                    <li>Ограничения игровых действий</li>
+                    <li>Правила взаимодействия персонажей</li>
+                    <li>Система наказаний за нарушения</li>
+                    <li>Границы ролевой игры</li>
+                    <li>Этикет и поведение игроков</li>
+                </ul>
+                <a href="non-rp-rules.html" class="charter-btn">Изучить Правила Non-RP</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.charter-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(30px)';
+                
+                setTimeout(() => {
+                    card.style.transition = 'all 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+
+        document.querySelectorAll('.charter-card').forEach(card => {
+            card.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        console.log('🏰 Выбор устава загружен!');
+        console.log('👑 Доступны уставы: Королевство Ре-Эсти и Империя Бахарут');
+    </script>
+</body>
+</html> 
