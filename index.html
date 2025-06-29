@@ -2755,11 +2755,28 @@ document.addEventListener('DOMContentLoaded', function() {
       const statuses = [
         "Бравый гном", "Трусливый маг", "Загадочный эльф", "Могучий орк",
         "Хитрый гоблин", "Спящий дракон", "Начинающий герой", "Король тыкв",
-        "Потерянный во времени", "Мастер над монетой"
+        "Потерянный во времени", "Мастер над монетой",
+        // Новые обычные
+        "Собиратель грибов", "Паладин выходного дня", "Вечный крафтер", "Питомец демона", "Почетный кузнец"
+      ];
+      const rareStatuses = [
+        "Тралалело тралала", "Босс качалки", "Мега крип", "Охранник лоутаба", "Данжеон мастер"
+      ];
+      const ultraRareStatuses = [
+        "Да ну нахуй, сам аинз", "лоликон или лолипоп", "Лимонная девочка", "Порнхаб мастер 80lvl"
       ];
 
-      // Функция для получения случайного статуса
-      const getRandomStatus = () => statuses[Math.floor(Math.random() * statuses.length)];
+      // Функция для получения случайного статуса с разной редкостью
+      const getRandomStatus = () => {
+        const roll = Math.random();
+        if (roll < 0.02) {
+          return ultraRareStatuses[Math.floor(Math.random() * ultraRareStatuses.length)];
+        } else if (roll < 0.10) {
+          return rareStatuses[Math.floor(Math.random() * rareStatuses.length)];
+        } else {
+          return statuses[Math.floor(Math.random() * statuses.length)];
+        }
+      };
 
       // Функция для обновления UI
       const updateUI = (user) => {
