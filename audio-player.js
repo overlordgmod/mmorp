@@ -1,6 +1,32 @@
+// Глобальная переменная для отслеживания текущего плеера
+let currentAudioPlayer = null;
+
+// Статический метод для остановки всех аудио элементов
+function stopAllAudio() {
+    const allAudio = document.querySelectorAll('audio');
+    allAudio.forEach(audio => {
+        audio.pause();
+        audio.currentTime = 0;
+    });
+}
+
 class AudioPlayer {
     constructor() {
         console.log('Initializing AudioPlayer');
+        
+        // Останавливаем все аудио элементы на странице
+        stopAllAudio();
+        
+        // Проверяем, не создан ли уже экземпляр
+        if (currentAudioPlayer && currentAudioPlayer !== this) {
+            console.log('Audio player already exists, stopping previous instance');
+            currentAudioPlayer.stopAndDestroy();
+        }
+        
+        // Удаляем существующие элементы плеера, если они есть
+        const existingPlayers = document.querySelectorAll('.audio-player');
+        existingPlayers.forEach(player => player.remove());
+        
         this.audio = new Audio('https://overlord-mmorp.onrender.com/phonmusic.mp3');
         this.audio.loop = true;
         
@@ -29,6 +55,25 @@ class AudioPlayer {
         
         // Сохраняем состояние при уходе со страницы
         this.setupPageUnloadHandler();
+        
+        // Устанавливаем текущий плеер
+        currentAudioPlayer = this;
+    }
+
+    // Новый метод для остановки и уничтожения плеера
+    stopAndDestroy() {
+        console.log('Stopping and destroying previous audio player');
+        if (this.audio) {
+            this.audio.pause();
+            this.audio.src = '';
+            this.audio.load();
+        }
+        if (this.volumeRestoreTimeout) {
+            clearTimeout(this.volumeRestoreTimeout);
+        }
+        if (this.playerElement) {
+            this.playerElement.remove();
+        }
     }
 
     createPlayer() {
@@ -242,6 +287,7 @@ class AudioPlayer {
         document.body.appendChild(player);
 
         this.player = player;
+        this.playerElement = player;
         this.playPauseBtn = player.querySelector('.play-pause');
         this.rewindBtn = player.querySelector('.rewind');
         this.progressSlider = player.querySelector('.progress-slider');
@@ -296,6 +342,18 @@ class AudioPlayer {
         // Сохраняем состояние при уходе со страницы
         window.addEventListener('beforeunload', () => {
             this.saveCurrentState();
+            // Останавливаем плеер при уходе со страницы
+            if (this.audio) {
+                this.audio.pause();
+            }
+        });
+        
+        // Обработчик для события pagehide (когда страница скрывается)
+        window.addEventListener('pagehide', () => {
+            this.saveCurrentState();
+            if (this.audio) {
+                this.audio.pause();
+            }
         });
         
         // Также сохраняем при изменении видимости страницы
@@ -465,5 +523,11 @@ class AudioPlayer {
 // Initialize player when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('DOM loaded, creating audio player');
-    new AudioPlayer();
+    
+    // Проверяем, не создан ли уже плеер
+    if (!currentAudioPlayer) {
+        new AudioPlayer();
+    } else {
+        console.log('Audio player already exists, reusing existing instance');
+    }
 }); 
