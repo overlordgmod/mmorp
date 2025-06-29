@@ -1968,6 +1968,32 @@
         background: #9b7ad6;
     }
   </style>
+  <style>
+  .rare-status {
+    box-shadow: 0 0 12px 2px #ff2d2d, 0 0 4px 2px #ff2d2d;
+    border-radius: 8px;
+    padding: 2px 8px;
+    background: rgba(60,0,0,0.12);
+    color: #fff;
+    transition: box-shadow 0.3s;
+  }
+  .ultra-rare-status {
+    border-radius: 8px;
+    padding: 2px 8px;
+    color: #fff;
+    background: rgba(40,40,40,0.18);
+    box-shadow: 0 0 16px 4px #fff;
+    animation: rgb-glow 2s linear infinite;
+    background-clip: padding-box;
+  }
+  @keyframes rgb-glow {
+    0% { box-shadow: 0 0 16px 4px #ff2d2d, 0 0 8px 2px #ff2d2d; }
+    25% { box-shadow: 0 0 16px 4px #2dff2d, 0 0 8px 2px #2dff2d; }
+    50% { box-shadow: 0 0 16px 4px #2d7fff, 0 0 8px 2px #2d7fff; }
+    75% { box-shadow: 0 0 16px 4px #ff2dd8, 0 0 8px 2px #ff2dd8; }
+    100% { box-shadow: 0 0 16px 4px #ff2d2d, 0 0 8px 2px #ff2d2d; }
+  }
+  </style>
 <script>
   function initSlider() {
     let current = 0;
@@ -2793,6 +2819,15 @@ document.addEventListener('DOMContentLoaded', function() {
             localStorage.setItem(`user-status-${user.id}`, savedStatus);
           }
           userStatus.textContent = savedStatus;
+
+          // Сброс классов
+          userStatus.classList.remove('rare-status', 'ultra-rare-status');
+          // Применяем класс для редких и очень редких статусов
+          if (rareStatuses.includes(savedStatus)) {
+            userStatus.classList.add('rare-status');
+          } else if (ultraRareStatuses.includes(savedStatus)) {
+            userStatus.classList.add('ultra-rare-status');
+          }
 
         } else {
           loginButton.style.display = 'flex';
