@@ -1,21 +1,18 @@
 // Глобальная переменная для отслеживания текущего плеера
 let currentAudioPlayer = null;
 
-// Статический метод для остановки всех аудио элементов
-function stopAllAudio() {
-    const allAudio = document.querySelectorAll('audio');
-    allAudio.forEach(audio => {
-        audio.pause();
-        audio.currentTime = 0;
-    });
-}
+// Статический метод для остановки всех аудио элементов (больше не используется)
+// function stopAllAudio() {
+//     const allAudio = document.querySelectorAll('audio');
+//     allAudio.forEach(audio => {
+//         audio.pause();
+//         audio.currentTime = 0;
+//     });
+// }
 
 class AudioPlayer {
     constructor() {
         console.log('Initializing AudioPlayer');
-        
-        // Останавливаем все аудио элементы на странице
-        stopAllAudio();
         
         // Проверяем, не создан ли уже экземпляр
         if (currentAudioPlayer && currentAudioPlayer !== this) {
@@ -342,18 +339,13 @@ class AudioPlayer {
         // Сохраняем состояние при уходе со страницы
         window.addEventListener('beforeunload', () => {
             this.saveCurrentState();
-            // Останавливаем плеер при уходе со страницы
-            if (this.audio) {
-                this.audio.pause();
-            }
+            // Не останавливаем аудио!
         });
         
         // Обработчик для события pagehide (когда страница скрывается)
         window.addEventListener('pagehide', () => {
             this.saveCurrentState();
-            if (this.audio) {
-                this.audio.pause();
-            }
+            // Не останавливаем аудио!
         });
         
         // Также сохраняем при изменении видимости страницы
@@ -390,7 +382,11 @@ class AudioPlayer {
             // Восстановить статус воспроизведения
             if (this.isPlaying && !this.autoPlayAttempted) {
                 this.autoPlayAttempted = true;
-                this.attemptAutoPlay();
+                this.audio.play().then(() => {
+                    this.playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(() => {
+                    this.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                });
             } else {
                 this.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
             }
